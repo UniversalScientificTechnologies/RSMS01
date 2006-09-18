@@ -1,0 +1,873 @@
+CCS PCW C Compiler, Version 3.110, 15448
+
+               Filename: c:\miho_dat\dart\lcd_term\lcd_term.LST
+
+               ROM used: 422 (41%)
+                         Largest free fragment is 602
+               RAM used: 52 (76%) at main() level
+                         65 (96%) worst case
+               Stack:    6 worst case (4 in main + 2 for interrupts)
+
+*
+0000:  MOVLW  00
+0001:  MOVWF  0A
+0002:  GOTO   158
+0003:  NOP
+0004:  BTFSC  03.5
+0005:  GOTO   00A
+0006:  MOVWF  0E
+0007:  SWAPF  03,W
+0008:  MOVWF  0F
+0009:  GOTO   00F
+000A:  BCF    03.5
+000B:  MOVWF  0E
+000C:  SWAPF  03,W
+000D:  MOVWF  0F
+000E:  BSF    0F.1
+000F:  MOVF   0A,W
+0010:  MOVWF  13
+0011:  CLRF   0A
+0012:  BCF    03.7
+0013:  SWAPF  0E,F
+0014:  MOVF   04,W
+0015:  MOVWF  10
+0016:  MOVF   0C,W
+0017:  MOVWF  11
+0018:  MOVF   0D,W
+0019:  MOVWF  12
+001A:  BCF    03.5
+001B:  BTFSS  0B.4
+001C:  GOTO   01F
+001D:  BTFSC  0B.1
+001E:  GOTO   07E
+001F:  MOVF   10,W
+0020:  MOVWF  04
+0021:  MOVF   11,W
+0022:  MOVWF  0C
+0023:  MOVF   12,W
+0024:  MOVWF  0D
+0025:  MOVF   13,W
+0026:  MOVWF  0A
+0027:  SWAPF  0F,W
+0028:  MOVWF  03
+0029:  BCF    03.5
+002A:  SWAPF  0E,W
+002B:  BTFSC  0F.1
+002C:  BSF    03.5
+002D:  RETFIE
+....................  // LCD Terminal pro menic pro solarni vozitko  
+.................... // (c)miho 2005  
+....................   
+.................... // Pouziva PIC16F84 (mozno i jakykoli jiny, nepouzivaji se zadne specialni funkce).  
+.................... // Na vstupnim vyvodu RS_IN ocekava seriovou komunikaci rychlosti RS_BOUD. Pri detekci  
+.................... // start bitu pomoci preruseni dojde k programovemu prijmu znaku a jeho zarazeni do  
+.................... // fronty FIFO. Po navratu z preruseni dochazi k vypisu na pripojeny dvouradkovy  
+.................... // LCD displej. Program zpracovava ridici kody dle knihovny LCD.C. Pri delsich vypisech  
+.................... // musi vysilajici strana ponechat (obcas) nejaky cas na zpracovani (napriklad 20ms).  
+....................   
+.................... #include <16F84.h>                  // define standardnich konstant procesoru 
+....................  //////// Standard Header file for the PIC16F84 device ////////////////  
+.................... #device PIC16F84  
+.................... #list  
+....................  
+.................... #use delay(clock=4000000)           // standardni krystal  
+*
+0096:  MOVLW  41
+0097:  MOVWF  04
+0098:  MOVF   00,W
+0099:  BTFSC  03.2
+009A:  GOTO   0AA
+009B:  MOVLW  01
+009C:  MOVWF  0D
+009D:  CLRF   0C
+009E:  DECFSZ 0C,F
+009F:  GOTO   09E
+00A0:  DECFSZ 0D,F
+00A1:  GOTO   09D
+00A2:  MOVLW  4A
+00A3:  MOVWF  0C
+00A4:  DECFSZ 0C,F
+00A5:  GOTO   0A4
+00A6:  NOP
+00A7:  NOP
+00A8:  DECFSZ 00,F
+00A9:  GOTO   09B
+00AA:  RETLW  00
+.................... #fuses HS, NOWDT, NOPUT, NOPROTECT  
+....................   
+....................   
+.................... // Parmetry komuniace  
+.................... //  
+.................... #define INV                         // definuje polaritu  
+.................... #define RS_BOUD         9600        // komunikacni rychlost  
+.................... #define RS_IN           PIN_B0      // musi to byt vstup extrniho preruseni  
+....................   
+....................   
+.................... // Pripojeni LCD displeje  
+.................... //  
+.................... #define LCD_RS          PIN_A0      // rizeni registru LCD displeje  
+.................... #define LCD_E           PIN_A1      // enable LCD displeje  
+.................... #define LCD_DATA_LSB    PIN_B4      // pripojeni LSB bitu datoveho portu LCD displeje (celkem 4 bity vzestupne za sebou)  
+....................   
+.................... #include "LCD.C" 
+....................  // LCD modul pro ovladani dvouradkoveho LCD modulu se standardnim Hitachi radicem  
+.................... // (c)miho 2002,2005  
+.................... //  
+.................... // Historie:  
+.................... //  
+.................... // 0.00  Uvodni verze se snadnou definici portu LCD displeje  
+.................... // 0.01  Oprava portu (zapomenute stare identifikatory)  
+.................... // 0.02  Doplnena moznost pripojeni datoveho portu LCD na libovolne porty  
+.................... // 0.03  Doplnena procedura lcd_clr pro smazani displeje  
+.................... //  
+.................... //  
+.................... // Funkce:  
+.................... //  
+.................... //   lcd_init()            inicializuje LCD displej a porty, nutno volat jako prvni  
+.................... //  
+.................... //   lcd_putc(c)           zapis snaku do lcd displeje, zpracovava nasledujici ridici znaky  
+.................... //                         \f = \x0C   - nova stranka - smazani displeje  
+.................... //                         \n = \x0A   - odradkovani (prechod na druhou radku)  
+.................... //                         \b = \x08   - backspace - posunuti kurzoru o 1 pozici zpet  
+.................... //                         \r = \x0D   - goto home to position 1,1  
+.................... //                         \0  .. \7   - definovatelne znaky v pozicich 0 az 7 v CGRAM  
+.................... //                         \20 .. \27  - alternativne zapsane znaky (oktalove) v pozicich 0 az 7 CGRAM  
+.................... //                         Pozor na to, ze funkce printf konci tisk pokud narazi na \0 (konec retezce)  
+.................... //  
+.................... //   lcd_gotoxy(x,y)       presune kurzor na uvedenou adresu  
+.................... //                         nekontroluje parametry  
+.................... //  
+.................... //   lcd_cursor_on         zapne kurzor  
+.................... //   lcd_cursor_off        vypne kurzor  
+.................... //  
+.................... //   lcd_clr               smaze displej  
+.................... //  
+.................... //   lcd_define_char(Index, Def)       Makro, ktere definuje znaky od pozice Index obsahem definicniho  
+.................... //                                     retezce Def. Kazdych 8 znaku retezce Def definuje dalsi znak v CGRAM.  
+.................... //                                     Kapacita CGRAM je celkem 8 znaku s indexem 0 az 7.  
+.................... //                                     Na konci se provede lcd_gotoxy(1,1).  
+.................... //                                     Na konci teto knihovny je priklad pouziti definovanych znaku  
+.................... //  
+.................... //  
+.................... // Definice portu:                     // Datovy port displeje pripojeny na 4 bity za sebou na jeden port  
+.................... //  
+.................... // #define LCD_RS          PIN_B2      // rizeni registru LCD displeje  
+.................... // #define LCD_E           PIN_B1      // enable LCD displeje  
+.................... // #define LCD_DATA_LSB    PIN_C2      // pripojeni LSB bitu datoveho portu LCD displeje (celkem 4 bity vzestupne za sebou)  
+.................... //  
+.................... //  
+.................... // Alternativni definice:              // Datovy port displeje pripojeny na libovolne 4 bitove porty (vede na kod delsi asi o 25 slov)  
+.................... //  
+.................... // #define LCD_RS          PIN_B2      // rizeni registru LCD displeje  
+.................... // #define LCD_E           PIN_B1      // enable LCD displeje  
+.................... // #define LCD_D0          PIN_C2      // D0 - datove bity pripojene na libovolne porty  
+.................... // #define LCD_D1          PIN_C3      // D1  
+.................... // #define LCD_D2          PIN_C4      // D2  
+.................... // #define LCD_D3          PIN_C5      // D3  
+....................   
+....................   
+....................   
+....................   
+.................... // Privatni sekce, cist jen v pripade, ze neco nefunguje  
+....................   
+....................   
+....................   
+....................   
+.................... #ifdef LCD_DATA_LSB  
+.................... // Generovane defince portu pro ucely teto knihovny aby kod generoval spravne IO operace a soucasne  
+.................... // bylo mozne jednoduse deklarovat pripojene piny LCD displeje pri pouziti teto knihovny. Problem spociva  
+.................... // v tom, ze se musi spravne ridit smery portu a soucasne datovy port zabira jen 4 bity ze zadaneho portu  
+.................... //  
+.................... #define LCD_SHIFT (LCD_DATA_LSB&7)                 // pocet bitu posuvu datoveho kanalu v datovem portu  
+.................... #define LCD_PORT  (LCD_DATA_LSB>>3)                // adresa LCD datoveho portu  
+.................... #define LCD_TRIS  (LCD_PORT+0x80)                  // adresa prislusneho TRIS registru  
+.................... #define LCD_MASK  (0xF<<LCD_SHIFT)                 // maska platnych bitu  
+.................... //  
+.................... #if LCD_SHIFT>4                                    // kontrola mezi  
+.................... #error LCD data port LSB bit not in range 0..4  
+.................... #endif  
+.................... #endif  
+....................   
+....................   
+.................... // Definice konstant pro LCD display  
+.................... //  
+.................... #define LCD_CURSOR_ON_  0x0E     // kurzor jako blikajici radka pod znakem  
+.................... #define LCD_CURSOR_OFF_ 0x0C     // zadny kurzor  
+.................... #define LCD_LINE_2      0x40     // adresa 1. znaku 2. radky  
+....................   
+....................   
+.................... // Definice rezimu LCD displeje  
+.................... //  
+.................... BYTE const LCD_INIT_STRING[4] =  
+.................... {  
+....................    0x28,                         // intrfejs 4 bity, 2 radky, font 5x7  
+....................    LCD_CURSOR_OFF_,              // display on, kurzor off,  
+....................    0x01,                         // clear displeje  
+....................    0x06                          // inkrement pozice kurzoru (posun kurzoru doprava)  
+.................... };  
+*
+002E:  BCF    0A.0
+002F:  BCF    0A.1
+0030:  BCF    0A.2
+0031:  ADDWF  02,F
+0032:  RETLW  28
+0033:  RETLW  0C
+0034:  RETLW  01
+0035:  RETLW  06
+....................   
+....................   
+.................... // Odesle nibble do displeje (posle data a klikne signalem e)  
+.................... //  
+.................... void lcd_send_nibble( BYTE n )  
+.................... {  
+....................    #ifdef LCD_DATA_LSB  
+....................       // data jsou za sebou na 4 bitech jednoho portu  
+....................       *LCD_PORT = (*LCD_PORT & ~LCD_MASK) | ((n << LCD_SHIFT) & LCD_MASK);      // nastav datove bity portu a ostatni zachovej  
+*
+00AB:  MOVF   06,W
+00AC:  ANDLW  0F
+00AD:  MOVWF  48
+00AE:  SWAPF  47,W
+00AF:  MOVWF  0C
+00B0:  MOVLW  F0
+00B1:  ANDWF  0C,F
+00B2:  MOVF   0C,W
+00B3:  ANDLW  F0
+00B4:  IORWF  48,W
+00B5:  MOVWF  06
+....................    #else  
+....................       // data jsou na libovolnych 4 bitech libovolnych portu  
+....................       output_bit(LCD_D0,bit_test(n,0));  
+....................       output_bit(LCD_D1,bit_test(n,1));  
+....................       output_bit(LCD_D2,bit_test(n,2));  
+....................       output_bit(LCD_D3,bit_test(n,3));  
+....................    #endif  
+....................    output_bit(LCD_E,1);       // vzestupna hrana  
+00B6:  BSF    05.1
+00B7:  BSF    03.5
+00B8:  BCF    05.1
+....................    delay_us(1);               // pockej alespon 450ns od e nebo alespon 195ns od dat  
+00B9:  NOP
+....................    output_bit(LCD_E,0);       // sestupna hrana (minimalni perioda e je 1us)  
+00BA:  BCF    03.5
+00BB:  BCF    05.1
+00BC:  BSF    03.5
+00BD:  BCF    05.1
+00BE:  BCF    03.5
+00BF:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Odesle bajt do registru LCD  
+.................... //  
+.................... // Pokud je Adr=0 .. instrukcni registr  
+.................... // Pokud je Adr=1 .. datovy registr  
+.................... //  
+.................... void lcd_send_byte( BOOLEAN Adr, BYTE n )  
+.................... {  
+....................    output_bit(LCD_RS,Adr);    // vyber registr  
+00C0:  MOVF   45,F
+00C1:  BTFSS  03.2
+00C2:  GOTO   0C5
+00C3:  BCF    05.0
+00C4:  GOTO   0C6
+00C5:  BSF    05.0
+00C6:  BSF    03.5
+00C7:  BCF    05.0
+....................    swap(n);  
+00C8:  BCF    03.5
+00C9:  SWAPF  46,F
+....................    lcd_send_nibble(n);        // posli horni pulku bajtu  
+00CA:  MOVF   46,W
+00CB:  MOVWF  47
+00CC:  CALL   0AB
+....................    swap(n);  
+00CD:  SWAPF  46,F
+....................    lcd_send_nibble(n);        // posli spodni pulku bajtu  
+00CE:  MOVF   46,W
+00CF:  MOVWF  47
+00D0:  CALL   0AB
+....................    delay_us(40);              // minimalni doba na provedeni prikazu  
+00D1:  MOVLW  0D
+00D2:  MOVWF  0C
+00D3:  DECFSZ 0C,F
+00D4:  GOTO   0D3
+00D5:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Provede inicializaci LCD displeje, smaze obsah a nastavi mod displeje  
+.................... //  
+.................... // Tato procedura se musi volat pred pouzitim ostatnich lcd_ procedur  
+.................... //  
+.................... void lcd_init()  
+.................... {  
+....................   
+....................    int i;                              // pocitadlo cyklu  
+....................   
+....................    delay_ms(20);                       // spozdeni pro provedeni startu displeje po zapnuti napajeni  
+00D6:  MOVLW  14
+00D7:  MOVWF  41
+00D8:  CALL   096
+....................   
+.................... #ifdef LCD_DATA_LSB  
+....................    // data jsou na 4 bitech za sebou, nastav smer pro vsechny dalsi prenosy  
+....................    *LCD_TRIS = *LCD_TRIS & ~LCD_MASK;  // nuluj odpovidajici bity tris registru datoveho portu LCD  
+00D9:  MOVLW  0F
+00DA:  BSF    03.5
+00DB:  ANDWF  06,F
+.................... #endif  
+....................   
+....................    output_bit(LCD_RS,0);               // nastav jako vystup a nastav klidovy stav  
+00DC:  BCF    03.5
+00DD:  BCF    05.0
+00DE:  BSF    03.5
+00DF:  BCF    05.0
+....................    output_bit(LCD_E, 0);               // nastav jako vystup a nastav klidovy stav  
+00E0:  BCF    03.5
+00E1:  BCF    05.1
+00E2:  BSF    03.5
+00E3:  BCF    05.1
+....................   
+....................    for (i=0; i<3; i++)                 // nastav lcd do rezimu 8 bitu sbernice  
+00E4:  BCF    03.5
+00E5:  CLRF   3F
+00E6:  MOVF   3F,W
+00E7:  SUBLW  02
+00E8:  BTFSS  03.0
+00E9:  GOTO   0F2
+....................    {  
+....................       delay_ms(2);                     // muze byt rozdelany prenos dat (2x 4 bity) nebo pomaly povel  
+00EA:  MOVLW  02
+00EB:  MOVWF  41
+00EC:  CALL   096
+....................       lcd_send_nibble(3);              // rezim 8 bitu  
+00ED:  MOVLW  03
+00EE:  MOVWF  47
+00EF:  CALL   0AB
+....................    }  
+00F0:  INCF   3F,F
+00F1:  GOTO   0E6
+....................   
+....................    delay_us(40);                       // cas na zpracovani  
+00F2:  MOVLW  0D
+00F3:  MOVWF  0C
+00F4:  DECFSZ 0C,F
+00F5:  GOTO   0F4
+....................    lcd_send_nibble(2);                 // nastav rezim 4 bitu (plati od nasledujiciho prenosu)  
+00F6:  MOVLW  02
+00F7:  MOVWF  47
+00F8:  CALL   0AB
+....................    delay_us(40);                       // cas na zpracovani  
+00F9:  MOVLW  0D
+00FA:  MOVWF  0C
+00FB:  DECFSZ 0C,F
+00FC:  GOTO   0FB
+....................   
+....................    for (i=0;i<3;i++)                   // proved inicializaci (nastaveni modu, smazani apod)  
+00FD:  CLRF   3F
+00FE:  MOVF   3F,W
+00FF:  SUBLW  02
+0100:  BTFSS  03.0
+0101:  GOTO   10E
+....................    {  
+....................       lcd_send_byte(0,LCD_INIT_STRING[i]);  
+0102:  MOVF   3F,W
+0103:  CALL   02E
+0104:  MOVWF  40
+0105:  CLRF   45
+0106:  MOVF   40,W
+0107:  MOVWF  46
+0108:  CALL   0C0
+....................       delay_ms(2);  
+0109:  MOVLW  02
+010A:  MOVWF  41
+010B:  CALL   096
+....................    }  
+010C:  INCF   3F,F
+010D:  GOTO   0FE
+010E:  GOTO   16C (RETURN)
+.................... }  
+....................   
+....................   
+.................... // Proved presun kurzoru  
+.................... //  
+.................... // Pozice 1.1 je domu  
+.................... //  
+.................... void lcd_gotoxy( BYTE x, BYTE y)  
+.................... {  
+....................   
+....................    BYTE Adr;  
+....................   
+....................    Adr=x-1;  
+010F:  MOVLW  01
+0110:  SUBWF  41,W
+0111:  MOVWF  43
+....................    if(y==2)  
+0112:  MOVF   42,W
+0113:  SUBLW  02
+0114:  BTFSS  03.2
+0115:  GOTO   118
+....................      Adr+=LCD_LINE_2;  
+0116:  MOVLW  40
+0117:  ADDWF  43,F
+....................   
+....................    lcd_send_byte(0,0x80|Adr);  
+0118:  MOVF   43,W
+0119:  IORLW  80
+011A:  MOVWF  44
+011B:  CLRF   45
+011C:  MOVF   44,W
+011D:  MOVWF  46
+011E:  CALL   0C0
+011F:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Zapis znaku na displej, zpracovani ridicich znaku  
+.................... //  
+.................... void lcd_putc( char c)  
+.................... {  
+....................   
+....................    switch (c)  
+0120:  MOVF   40,W
+0121:  MOVWF  0C
+0122:  MOVLW  0C
+0123:  SUBWF  0C,W
+0124:  BTFSC  03.2
+0125:  GOTO   133
+0126:  MOVLW  0A
+0127:  SUBWF  0C,W
+0128:  BTFSC  03.2
+0129:  GOTO   13B
+012A:  MOVLW  0D
+012B:  SUBWF  0C,W
+012C:  BTFSC  03.2
+012D:  GOTO   141
+012E:  MOVLW  08
+012F:  SUBWF  0C,W
+0130:  BTFSC  03.2
+0131:  GOTO   146
+0132:  GOTO   14B
+....................    {  
+....................       case '\f'   : lcd_send_byte(0,1);            // smaz displej  
+0133:  CLRF   45
+0134:  MOVLW  01
+0135:  MOVWF  46
+0136:  CALL   0C0
+....................                     delay_ms(2);  
+0137:  MOVLW  02
+0138:  MOVWF  41
+0139:  CALL   096
+....................                                             break;  
+013A:  GOTO   157
+....................       case '\n'   : lcd_gotoxy(1,2);        break; // presun se na 1. znak 2. radky  
+013B:  MOVLW  01
+013C:  MOVWF  41
+013D:  MOVLW  02
+013E:  MOVWF  42
+013F:  CALL   10F
+0140:  GOTO   157
+....................       case '\r'   : lcd_gotoxy(1,1);        break; // presun home  
+0141:  MOVLW  01
+0142:  MOVWF  41
+0143:  MOVWF  42
+0144:  CALL   10F
+0145:  GOTO   157
+....................       case '\b'   : lcd_send_byte(0,0x10);  break; // posun kurzor o 1 zpet  
+0146:  CLRF   45
+0147:  MOVLW  10
+0148:  MOVWF  46
+0149:  CALL   0C0
+014A:  GOTO   157
+....................       default     : if (c<0x20) c&=0x7;            // preklopeni definovatelnych znaku na rozsah 0 az 0x1F  
+014B:  MOVF   40,W
+014C:  SUBLW  1F
+014D:  BTFSS  03.0
+014E:  GOTO   151
+014F:  MOVLW  07
+0150:  ANDWF  40,F
+....................                     lcd_send_byte(1,c);     break; // zapis znak  
+0151:  MOVLW  01
+0152:  MOVWF  45
+0153:  MOVF   40,W
+0154:  MOVWF  46
+0155:  CALL   0C0
+0156:  GOTO   157
+....................    }  
+0157:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Zapni kurzor  
+.................... //  
+.................... void lcd_cursor_on()  
+.................... {  
+....................    lcd_send_byte(0,LCD_CURSOR_ON_);  
+.................... }  
+....................   
+....................   
+.................... // Vypni kurzor  
+.................... //  
+.................... void lcd_cursor_off()  
+.................... {  
+....................    lcd_send_byte(0,LCD_CURSOR_OFF_);  
+.................... }  
+....................   
+....................   
+.................... // Smaz displej  
+.................... //  
+.................... void lcd_clr()  
+.................... {  
+....................    lcd_putc('\f');  
+.................... }  
+....................   
+....................   
+.................... // Definice vlastnich fontu  
+.................... //  
+.................... // Vlastnich definic muze byt jen 8 do pozic 0 az 7 pameti CGRAM radice lcd displeje  
+.................... // Pro snadne definovani jsou pripraveny nasledujici definice a na konci souboru je uveden  
+.................... // priklad pouziti definovanych znaku.  
+....................   
+....................   
+.................... // Pomocna procedura pro posilani ridicich dat do radice displeje  
+.................... //  
+.................... void lcd_putc2(int Data)  
+.................... {  
+....................    lcd_send_byte(1,Data);  
+.................... }  
+....................   
+....................   
+.................... // Pomocne definice pro programovani obsahu CGRAM  
+.................... //  
+.................... #define lcd_define_start(Code)      lcd_send_byte(0,0x40+(Code<<3)); delay_ms(2)  
+.................... #define lcd_define_def(String)      printf(lcd_putc2,String);  
+.................... #define lcd_define_end()            lcd_send_byte(0,3); delay_ms(2)  
+....................   
+....................   
+.................... // Vlastni vykonne makro pro definovani fontu do pozice Index CGRAM s definicnim retezcem Def  
+.................... //  
+.................... #define lcd_define_char(Index, Def) lcd_define_start(Index); lcd_define_def(Def); lcd_define_end();  
+....................   
+....................   
+.................... // Pripravene definice fontu vybranych znaku  
+.................... // V tabulce nesmi byt 00 (konec retezce v printf()), misto toho davame 80  
+.................... //  
+.................... #define LCD_CHAR_BAT100 "\x0E\x1F\x1F\x1F\x1F\x1F\x1F\x1F"      /* symbol plne baterie       */  
+.................... #define LCD_CHAR_BAT50  "\x0E\x1F\x11\x11\x13\x17\x1F\x1F"      /* symbol polovicni baterie  */  
+.................... #define LCD_CHAR_BAT0   "\x0E\x1F\x11\x11\x11\x11\x11\x1F"      /* symbol vybite baterie     */  
+.................... #define LCD_CHAR_UP     "\x80\x04\x0E\x15\x04\x04\x04\x80"      /* symbol sipka nahoru       */  
+.................... #define LCD_CHAR_DOWN   "\x80\x04\x04\x04\x15\x0E\x04\x80"      /* symbol Sipka dolu         */  
+.................... #define LCD_CHAR_LUA    "\x04\x0E\x11\x11\x1F\x11\x11\x80"      /* A s carkou                */  
+.................... #define LCD_CHAR_LLA    "\x01\x02\x0E\x01\x1F\x11\x0F\x80"      /* a s carkou                */  
+.................... #define LCD_CHAR_HUC    "\x0A\x0E\x11\x10\x10\x11\x0E\x80"      /* C s hackem                */  
+.................... #define LCD_CHAR_HLC    "\x0A\x04\x0E\x10\x10\x11\x0E\x80"      /* c s hackem                */  
+.................... #define LCD_CHAR_HUD    "\x0A\x1C\x12\x11\x11\x12\x1C\x80"      /* D s hackem                */  
+.................... #define LCD_CHAR_HLD    "\x05\x03\x0D\x13\x11\x11\x0F\x80"      /* d s hackem                */  
+.................... #define LCD_CHAR_LUE    "\x04\x1F\x10\x10\x1E\x10\x1F\x80"      /* E s carkou                */  
+.................... #define LCD_CHAR_LLE    "\x01\x02\x0E\x11\x1F\x10\x0E\x80"      /* e s carkou                */  
+.................... #define LCD_CHAR_HUE    "\x0A\x1F\x10\x1E\x10\x10\x1F\x80"      /* E s hackem                */  
+.................... #define LCD_CHAR_HLE    "\x0A\x04\x0E\x11\x1F\x10\x0E\x80"      /* e s hackem                */  
+.................... #define LCD_CHAR_LUI    "\x04\x0E\x04\x04\x04\x04\x0E\x80"      /* I s carkou                */  
+.................... #define LCD_CHAR_LLI    "\x02\x04\x80\x0C\x04\x04\x0E\x80"      /* i s carkou                */  
+.................... #define LCD_CHAR_HUN    "\x0A\x15\x11\x19\x15\x13\x11\x80"      /* N s hackem                */  
+.................... #define LCD_CHAR_HLN    "\x0A\x04\x16\x19\x11\x11\x11\x80"      /* n s hackem                */  
+.................... #define LCD_CHAR_LUO    "\x04\x0E\x11\x11\x11\x11\x0E\x80"      /* O s carkou                */  
+.................... #define LCD_CHAR_LLO    "\x02\x04\x0E\x11\x11\x11\x0E\x80"      /* o s carkou                */  
+.................... #define LCD_CHAR_HUR    "\x0A\x1E\x11\x1E\x14\x12\x11\x80"      /* R s hackem                */  
+.................... #define LCD_CHAR_HLR    "\x0A\x04\x16\x19\x10\x10\x10\x80"      /* r s hackem                */  
+.................... #define LCD_CHAR_HUS    "\x0A\x0F\x10\x0E\x01\x01\x1E\x80"      /* S s hackem                */  
+.................... #define LCD_CHAR_HLS    "\x0A\x04\x0E\x10\x0E\x01\x1E\x80"      /* s s hackem                */  
+.................... #define LCD_CHAR_HUT    "\x0A\x1F\x04\x04\x04\x04\x04\x80"      /* T s hackem                */  
+.................... #define LCD_CHAR_HLT    "\x0A\x0C\x1C\x08\x08\x09\x06\x80"      /* t s hackem                */  
+.................... #define LCD_CHAR_LUU    "\x02\x15\x11\x11\x11\x11\x0E\x80"      /* U s carkou                */  
+.................... #define LCD_CHAR_LLU    "\x02\x04\x11\x11\x11\x13\x0D\x80"      /* u s carkou                */  
+.................... #define LCD_CHAR_CUU    "\x06\x17\x11\x11\x11\x11\x0E\x80"      /* U s krouzkem              */  
+.................... #define LCD_CHAR_CLU    "\x06\x06\x11\x11\x11\x11\x0E\x80"      /* u s krouzkem              */  
+.................... #define LCD_CHAR_LUY    "\x02\x15\x11\x0A\x04\x04\x04\x80"      /* Y s carkou                */  
+.................... #define LCD_CHAR_LLY    "\x02\x04\x11\x11\x0F\x01\x0E\x80"      /* y s carkou                */  
+.................... #define LCD_CHAR_HUZ    "\x0A\x1F\x01\x02\x04\x08\x1F\x80"      /* Z s hackem                */  
+.................... #define LCD_CHAR_HLZ    "\x0A\x04\x1F\x02\x04\x08\x1F\x80"      /* z s hackem                */  
+....................   
+....................   
+.................... // Priklad pouziti definovanych znaku  
+.................... //  
+.................... //  
+.................... //void lcd_sample()  
+.................... //{  
+.................... //   lcd_define_char(0,LCD_CHAR_BAT50);                 // Priklad definice znaku baterie do pozice 0  
+.................... //   lcd_define_char(2,LCD_CHAR_HLE LCD_CHAR_LUI);      // Priklad definice znaku e s hackem a I s carkou od pozice 2  
+.................... //                                                      // vsimnete si, ze neni carka mezi retezci s definici (oba retezce definuji  
+.................... //                                                      // jediny definicni retezec)  
+.................... //   printf(lcd_putc,"\fZnaky:\20\22\23");              // priklad vypisu znaku z pozice 0, 2 a 3  
+.................... //   delay_ms(1000);  
+.................... //   lcd_define_char(0,LCD_CHAR_BAT0);                  // Predefinovani tvaru znaku v pozici 0  
+.................... //   delay_ms(1000);  
+.................... //}  
+....................  
+....................   
+....................   
+.................... // Vstup seriovky  
+.................... //  
+.................... #ifdef INV  
+.................... #use RS232 (BAUD=RS_BOUD, RCV=RS_IN, PARITY=N, INVERT)  
+*
+0059:  MOVLW  08
+005A:  MOVWF  0C
+005B:  BSF    03.5
+005C:  BSF    06.0
+005D:  BCF    03.5
+005E:  BTFSS  06.0
+005F:  GOTO   05E
+0060:  CLRF   4C
+0061:  BSF    0C.7
+0062:  GOTO   071
+0063:  BCF    0C.7
+0064:  GOTO   071
+0065:  BCF    03.0
+0066:  BTFSS  06.0
+0067:  BSF    03.0
+0068:  RRF    4C,F
+0069:  BSF    0C.6
+006A:  GOTO   071
+006B:  BCF    0C.6
+006C:  DECFSZ 0C,F
+006D:  GOTO   065
+006E:  MOVF   4C,W
+006F:  MOVWF  0D
+0070:  GOTO   07D
+0071:  MOVLW  1C
+0072:  BTFSC  0C.7
+0073:  MOVLW  07
+0074:  MOVWF  0D
+0075:  DECFSZ 0D,F
+0076:  GOTO   075
+0077:  NOP
+0078:  BTFSC  0C.7
+0079:  GOTO   063
+007A:  BTFSC  0C.6
+007B:  GOTO   06B
+007C:  GOTO   065
+007D:  GOTO   083 (RETURN)
+.................... #else  
+.................... #use RS232 (BAUD=RS_BOUD, RCV=RS_IN, PARITY=N)  
+.................... #endif  
+....................   
+....................   
+.................... // Buffer FIFO  
+.................... //  
+.................... #define MAX 40                      // delka bufferu  
+....................   
+.................... char c[MAX];                        // bufer FIFO  
+.................... unsigned int ci;                    // ukazatel na bunku kam se bude ukladat novy znak  
+.................... unsigned int co;                    // ukazatel na bunku odkud se bude cist znak  
+....................   
+.................... // Preruseni - ukladani dat ze seriovky do bufferu  
+.................... //  
+.................... #int_ext                               // preruseni od zacatku znaku (start bit)  
+.................... void Interupt()  
+.................... {  
+....................    c[ci]=getc();                       // nacti znak (asynchronni cteni programem)  
+007E:  MOVLW  14
+007F:  ADDWF  3C,W
+0080:  MOVWF  04
+0081:  MOVWF  4B
+0082:  GOTO   059
+0083:  MOVF   4B,W
+0084:  MOVWF  04
+0085:  MOVF   0D,W
+0086:  MOVWF  00
+....................   
+....................    if (ci<(MAX-1)) ci++; else ci=0;    // posun ukazovatko do FIFO  
+0087:  MOVF   3C,W
+0088:  SUBLW  26
+0089:  BTFSS  03.0
+008A:  GOTO   08D
+008B:  INCF   3C,F
+008C:  GOTO   08E
+008D:  CLRF   3C
+....................   
+....................    #ifdef INV  
+....................    while(input(PIN_B0));               // pockej na konec posledniho bitu  
+008E:  BSF    03.5
+008F:  BSF    06.0
+0090:  BCF    03.5
+0091:  BTFSC  06.0
+0092:  GOTO   08E
+....................    #else  
+....................    while(~input(PIN_B0));              // pockej na konec posledniho bitu  
+....................    #endif  
+0093:  BCF    0B.1
+0094:  BCF    0A.3
+0095:  GOTO   01F
+.................... }  
+....................   
+....................   
+.................... // Hlavni smycka  
+.................... //  
+.................... void main()  
+.................... {  
+....................    char ch;                               // pomocna promenna pro 1 znak  
+*
+0158:  CLRF   04
+0159:  MOVLW  1F
+015A:  ANDWF  03,F
+015B:  BSF    03.5
+015C:  BCF    05.0
+015D:  BCF    03.5
+015E:  BCF    05.0
+....................   
+....................    // Inicializace portu  
+....................    output_a(0);                           // vsechny porty vystupni  
+015F:  MOVLW  00
+0160:  BSF    03.5
+0161:  MOVWF  05
+0162:  BCF    03.5
+0163:  CLRF   05
+....................    output_b(0);                           // a nulove krome  
+0164:  BSF    03.5
+0165:  MOVWF  06
+0166:  BCF    03.5
+0167:  CLRF   06
+....................    output_float(RS_IN);                   // portu pro RS232 (a preruseni)  
+0168:  BSF    03.5
+0169:  BSF    06.0
+....................   
+....................    // Inicializace LCD  
+....................    lcd_init();                            // inicializace LCD  
+016A:  BCF    03.5
+016B:  GOTO   0D6
+....................    printf(lcd_putc,"LCD Terminal 1.0");   // standardni vypis  
+*
+0036:  BCF    0A.0
+0037:  BCF    0A.1
+0038:  BCF    0A.2
+0039:  ADDWF  02,F
+003A:  RETLW  4C
+003B:  RETLW  43
+003C:  RETLW  44
+003D:  RETLW  20
+003E:  RETLW  54
+003F:  RETLW  65
+0040:  RETLW  72
+0041:  RETLW  6D
+0042:  RETLW  69
+0043:  RETLW  6E
+0044:  RETLW  61
+0045:  RETLW  6C
+0046:  RETLW  20
+0047:  RETLW  31
+0048:  RETLW  2E
+0049:  RETLW  30
+004A:  RETLW  00
+*
+016C:  CLRF   3F
+016D:  MOVF   3F,W
+016E:  CALL   036
+016F:  INCF   3F,F
+0170:  MOVWF  40
+0171:  CALL   120
+0172:  MOVLW  10
+0173:  SUBWF  3F,W
+0174:  BTFSS  03.2
+0175:  GOTO   16D
+....................    #ifdef INV  
+....................    printf(lcd_putc,"\nInverted");         // oznameni o inverzni variante  
+*
+004B:  BCF    0A.0
+004C:  BCF    0A.1
+004D:  BCF    0A.2
+004E:  ADDWF  02,F
+004F:  RETLW  0A
+0050:  RETLW  49
+0051:  RETLW  6E
+0052:  RETLW  76
+0053:  RETLW  65
+0054:  RETLW  72
+0055:  RETLW  74
+0056:  RETLW  65
+0057:  RETLW  64
+0058:  RETLW  00
+*
+0176:  CLRF   3F
+0177:  MOVF   3F,W
+0178:  CALL   04B
+0179:  INCF   3F,F
+017A:  MOVWF  40
+017B:  CALL   120
+017C:  MOVLW  09
+017D:  SUBWF  3F,W
+017E:  BTFSS  03.2
+017F:  GOTO   177
+....................    #else  
+....................    printf(lcd_putc,"\nStandard");         // oznameni o inverzni variante  
+....................    #endif  
+....................    delay_ms(300);                         // cas na precteni  
+0180:  MOVLW  02
+0181:  MOVWF  3F
+0182:  MOVLW  96
+0183:  MOVWF  41
+0184:  CALL   096
+0185:  DECFSZ 3F,F
+0186:  GOTO   182
+....................    printf(lcd_putc,"\f");                 // smazani displeje  
+0187:  MOVLW  0C
+0188:  MOVWF  40
+0189:  CALL   120
+....................   
+....................    // Inicializace FIFO ukazatelu  
+....................    ci=0;  
+018A:  CLRF   3C
+....................    co=0;  
+018B:  CLRF   3D
+....................   
+....................    // Inicializace preruseni  
+....................    #ifdef INV                             // dle polarity kominkace polarita preruseni  
+....................    ext_int_edge(L_TO_H);  
+018C:  BSF    03.5
+018D:  BSF    01.6
+....................    #else  
+....................    ext_int_edge(H_TO_L);  
+....................    #endif  
+....................    enable_interrupts(int_ext);            // povoleni preruseni od INT0  
+018E:  BCF    03.5
+018F:  BSF    0B.4
+....................    enable_interrupts(global);             // povoleni globalniho preruseni  
+0190:  BSF    0B.7
+....................   
+....................    // Hlavni smycka  
+....................    while (1)  
+....................    {  
+....................   
+....................       // Test na neprazdny buffer  
+....................       while (ci==co);  
+0191:  MOVF   3D,W
+0192:  SUBWF  3C,W
+0193:  BTFSS  03.2
+0194:  GOTO   196
+0195:  GOTO   191
+....................   
+....................       // Zobrazeni znaku  
+....................       lcd_putc(c[co]);  
+0196:  MOVLW  14
+0197:  ADDWF  3D,W
+0198:  MOVWF  04
+0199:  MOVF   00,W
+019A:  MOVWF  3F
+019B:  MOVWF  40
+019C:  CALL   120
+....................   
+....................       // Posunuti ukazovatka  
+....................       if (co<(MAX-1)) co++; else co=0;  
+019D:  MOVF   3D,W
+019E:  SUBLW  26
+019F:  BTFSS  03.0
+01A0:  GOTO   1A3
+01A1:  INCF   3D,F
+01A2:  GOTO   1A4
+01A3:  CLRF   3D
+....................    }  
+01A4:  GOTO   191
+.................... }  
+....................  
+01A5:  SLEEP

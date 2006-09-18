@@ -1,0 +1,1408 @@
+CCS PCW C Compiler, Version 3.110, 15448
+
+               Filename: c:\miho_dat\dart\dart.LST
+
+               ROM used: 964 (24%)
+                         Largest free fragment is 2048
+               RAM used: 24 (14%) at main() level
+                         41 (23%) worst case
+               Stack:    6 worst case (3 in main + 3 for interrupts)
+
+*
+0000:  MOVLW  00
+0001:  MOVWF  0A
+0002:  GOTO   204
+0003:  NOP
+0004:  MOVWF  7F
+0005:  SWAPF  03,W
+0006:  CLRF   03
+0007:  MOVWF  21
+0008:  MOVF   7F,W
+0009:  MOVWF  20
+000A:  MOVF   0A,W
+000B:  MOVWF  28
+000C:  CLRF   0A
+000D:  SWAPF  20,F
+000E:  MOVF   04,W
+000F:  MOVWF  22
+0010:  MOVF   77,W
+0011:  MOVWF  23
+0012:  MOVF   78,W
+0013:  MOVWF  24
+0014:  MOVF   79,W
+0015:  MOVWF  25
+0016:  MOVF   7A,W
+0017:  MOVWF  26
+0018:  MOVF   7B,W
+0019:  MOVWF  27
+001A:  BCF    03.7
+001B:  BCF    03.5
+001C:  MOVLW  8C
+001D:  MOVWF  04
+001E:  BTFSS  00.3
+001F:  GOTO   022
+0020:  BTFSC  0C.3
+0021:  GOTO   039
+0022:  BTFSS  0B.5
+0023:  GOTO   026
+0024:  BTFSC  0B.2
+0025:  GOTO   03B
+0026:  MOVF   22,W
+0027:  MOVWF  04
+0028:  MOVF   23,W
+0029:  MOVWF  77
+002A:  MOVF   24,W
+002B:  MOVWF  78
+002C:  MOVF   25,W
+002D:  MOVWF  79
+002E:  MOVF   26,W
+002F:  MOVWF  7A
+0030:  MOVF   27,W
+0031:  MOVWF  7B
+0032:  MOVF   28,W
+0033:  MOVWF  0A
+0034:  SWAPF  21,W
+0035:  MOVWF  03
+0036:  SWAPF  7F,F
+0037:  SWAPF  7F,W
+0038:  RETFIE
+0039:  BCF    0A.3
+003A:  GOTO   096
+003B:  BCF    0A.3
+003C:  GOTO   0C4
+....................  // DART01A verze programu 1.00  
+.................... // (c)miho 2005  
+....................   
+.................... #include "DART.h" 
+....................  // DART01A verze programu 1.00  
+.................... // (c)miho 2005  
+....................   
+.................... #include <16F88.h>                     // standardni definice konstant 
+....................  //////// Header file for the PIC16F88  
+.................... #device PIC16F88  
+.................... #list 
+.................... #include <16F88_Reg.h>                 // standardni definice vsech FSR 
+.................... #list  
+....................  
+....................   
+.................... #device adc=8                          // AD prevodnik jen na 8 bitu  
+.................... #define xclock 4168000                 // muj konkretni PIC je trochu rychlejsi  
+.................... #use delay(clock=xclock,restart_wdt)  
+*
+00EF:  MOVLW  3C
+00F0:  MOVWF  04
+00F1:  MOVF   00,W
+00F2:  BTFSC  03.2
+00F3:  GOTO   105
+00F4:  MOVLW  01
+00F5:  MOVWF  78
+00F6:  MOVLW  BF
+00F7:  MOVWF  77
+00F8:  CLRWDT
+00F9:  DECFSZ 77,F
+00FA:  GOTO   0F8
+00FB:  DECFSZ 78,F
+00FC:  GOTO   0F6
+00FD:  MOVLW  58
+00FE:  MOVWF  77
+00FF:  DECFSZ 77,F
+0100:  GOTO   0FF
+0101:  NOP
+0102:  CLRWDT
+0103:  DECFSZ 00,F
+0104:  GOTO   0F4
+0105:  RETLW  00
+.................... #fuses INTRC_IO, WDT, NOPUT, NOPROTECT, NOBROWNOUT, MCLR, NOLVP, NOCPD, NODEBUG, CCPB3  
+....................  
+....................   
+....................   
+.................... #define BEEP0     PIN_A6   // pipak, prvni vystup  
+.................... #define BEEP1     PIN_A7   // pipak, druhy vystup  
+.................... #define PWM       PIN_B3   // PWM vystup pro menic  
+.................... #define REFPOWER  PIN_B1   // napajeni zdroje Vref  
+.................... #define MOTOR     PIN_B2   // zapinani motoru  
+.................... #define SW0       PIN_B7   // konfiguracni prepinac 0  
+.................... #define SW1       PIN_B6   // konfiguracni prepinac 1  
+....................   
+....................   
+.................... void InitRS232()  
+.................... // Inicializace HW RS232  
+.................... {  
+....................    SPBRG=xclock/9600/16-1; // ryclost 9600Bd  
+*
+00E3:  MOVLW  1A
+00E4:  BSF    03.5
+00E5:  MOVWF  19
+....................    RCSTA=0b10000000;       // enable USART  
+00E6:  MOVLW  80
+00E7:  BCF    03.5
+00E8:  MOVWF  18
+....................    TXSTA=0b00100100;       // BRGH=1, TX enable  
+00E9:  MOVLW  24
+00EA:  BSF    03.5
+00EB:  MOVWF  18
+00EC:  BCF    03.5
+00ED:  BCF    0A.3
+00EE:  GOTO   228 (RETURN)
+.................... }  
+....................   
+....................   
+.................... void Putc(char c)  
+.................... // Posilani znaku pres HW RS232  
+.................... {  
+....................    while(TRMT==0);         // cekej na prazdny TX buffer  
+*
+0106:  MOVLW  00
+0107:  BSF    03.5
+0108:  BTFSC  18.1
+0109:  MOVLW  01
+010A:  XORLW  00
+010B:  BTFSS  03.2
+010C:  GOTO   110
+010D:  BCF    03.5
+010E:  GOTO   106
+010F:  BSF    03.5
+....................    TXREG=c;                // predej data  
+0110:  BCF    03.5
+0111:  MOVF   40,W
+0112:  MOVWF  19
+0113:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Globalni promenna pro data posilana na SSP  
+.................... //   Nastavuje se funkci MotorPatternSet()  
+.................... //   Vyuziva se v prerusovaci rutine IntSSP()  
+.................... unsigned int8 MotorPattern;   // aktualni data pro SSP jednotku  
+....................   
+....................   
+.................... void MotorPatternSet(unsigned int Gear)  
+.................... // Na zaklade rychlosti nastavi MotorPattern pro SSP  
+.................... // Rychlost 0 znamena stop, rychlost 8 je maximum  
+.................... {  
+....................    // Tabulka rychlost -> pattern pro SSP  
+....................    unsigned int8 const ExpTab[8] = {0x02,0x06,0x0e,0x1e,0x3e,0x7e,0xfe,0xff};  
+*
+003D:  BCF    0A.0
+003E:  BCF    0A.1
+003F:  BCF    0A.2
+0040:  ADDWF  02,F
+0041:  RETLW  02
+0042:  RETLW  06
+0043:  RETLW  0E
+0044:  RETLW  1E
+0045:  RETLW  3E
+0046:  RETLW  7E
+0047:  RETLW  FE
+0048:  RETLW  FF
+....................   
+....................    // Vyber patternu  
+....................    if (Gear==0)                     // stav 0 znamena stop  
+*
+009B:  MOVF   43,F
+009C:  BTFSS  03.2
+009D:  GOTO   0AA
+....................    {  
+....................       output_low(MOTOR);            // klidovy stav  
+009E:  BSF    03.5
+009F:  BCF    06.2
+00A0:  BCF    03.5
+00A1:  BCF    06.2
+....................       SSPSTAT = 0;  
+00A2:  BSF    03.5
+00A3:  CLRF   14
+....................       SSPCON1 = 0;                  // SPI stop  
+00A4:  BCF    03.5
+00A5:  CLRF   14
+....................       disable_interrupts(INT_SSP);  // neni preruseni od SSP  
+00A6:  BSF    03.5
+00A7:  BCF    0C.3
+....................    }  
+....................    else                             // rizeny vykon  
+00A8:  GOTO   0C2
+00A9:  BCF    03.5
+....................    {  
+....................       if (Gear>7)                   // stav 8 a vice znamena plny vykon  
+00AA:  MOVF   43,W
+00AB:  SUBLW  07
+00AC:  BTFSC  03.0
+00AD:  GOTO   0B0
+....................       {  
+....................          Gear=8;                    // plny plyn  
+00AE:  MOVLW  08
+00AF:  MOVWF  43
+....................       }  
+....................   
+....................       MotorPattern=ExpTab[--Gear];  // prevod z hodnoty plynu na data pro SSP  
+00B0:  DECF   43,F
+00B1:  MOVF   43,W
+00B2:  CALL   03D
+00B3:  MOVWF  78
+00B4:  MOVWF  29
+....................       output_low(MOTOR);            // klidovy stav  
+00B5:  BSF    03.5
+00B6:  BCF    06.2
+00B7:  BCF    03.5
+00B8:  BCF    06.2
+....................       SSPSTAT = 0;  
+00B9:  BSF    03.5
+00BA:  CLRF   14
+....................       SSPCON1 = 0x22;               // SPI OSC/64  
+00BB:  MOVLW  22
+00BC:  BCF    03.5
+00BD:  MOVWF  14
+....................   
+....................       SSPBUF=MotorPattern;          // prvni data pro vyslani  
+00BE:  MOVF   29,W
+00BF:  MOVWF  13
+....................       enable_interrupts(INT_SSP);   // az budou vyslana prijde interrupt od SSP  
+00C0:  BSF    03.5
+00C1:  BSF    0C.3
+....................    }  
+00C2:  BCF    03.5
+00C3:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Obsluha preruseni od SSP jednotky, posila data z promenne MotorRun do SSP.  
+.................... #INT_SSP  
+.................... void IntSSP()  
+.................... {  
+....................    SSPBUF=MotorPattern;             // znova hdnota PWM patternu na SSP  
+*
+0096:  MOVF   29,W
+0097:  MOVWF  13
+0098:  BCF    0C.3
+0099:  BCF    0A.3
+009A:  GOTO   026
+.................... }  
+....................   
+....................   
+.................... void MotorSet(unsigned int Gear)  
+.................... // Nastavi vykon motoru dle hodnoty Gear a zahaji posilani PWM dat pres SSP pod prerusenim  
+.................... // od SSP jednotky  
+.................... //    0   stop  
+.................... //    1-7 pocet 1/8 vykonu  
+.................... //    >7  plny vykon  
+.................... {  
+*
+01CF:  MOVF   0B,W
+01D0:  ANDWF  0B,W
+01D1:  BCF    0B.7
+01D2:  MOVWF  20
+....................    // Nastav PWM pattern  
+....................    MotorPatternSet(Gear);           // nastav PWM pattern pro SSP  
+01D3:  MOVF   3C,W
+01D4:  MOVWF  43
+01D5:  CALL   09B
+01D6:  BTFSC  20.7
+01D7:  BSF    0B.7
+....................   
+....................    // Povol preruseni  
+....................    enable_interrupts(GLOBAL);       // povol preruseni  
+01D8:  MOVLW  C0
+01D9:  IORWF  0B,F
+01DA:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... void InitT0()  
+.................... // Inicializace casovace T0 (cca 1000x za sekundu)  
+.................... {  
+....................    setup_timer_0(RTCC_INTERNAL|RTCC_DIV_4);  // T0 z internich hodin 1/4  
+*
+016D:  BSF    03.5
+016E:  MOVF   01,W
+016F:  ANDLW  C0
+0170:  IORLW  01
+0171:  MOVWF  01
+....................    enable_interrupts(INT_RTCC);              // generuj preruseni od T0  
+0172:  BCF    03.5
+0173:  BSF    0B.5
+....................    enable_interrupts(GLOBAL);                // povol preruseni  
+0174:  MOVLW  C0
+0175:  IORWF  0B,F
+0176:  BCF    0A.3
+0177:  GOTO   277 (RETURN)
+.................... }  
+....................   
+....................   
+.................... // Globalni promenna pro mereni casu  
+.................... //   Nastavuje se procedurou TimeSet()  
+.................... //   Testuje se funkci TimeIf()  
+.................... //   Modifikuje se pri preruseni od casovace IntTo()  
+.................... unsigned int16 TimeTime;  
+....................   
+....................   
+.................... void TimerSet(unsigned int16 Time)  
+.................... // Nastavi casovac na zadany pocet ms  
+.................... // Test uplynuti casu se dela pomoci TimerIf()  
+.................... {  
+....................    // Nastav hodnotu  
+....................    disable_interrupts(INT_RTCC);    // nesmi prijit preruseni  
+*
+01DB:  BCF    0B.5
+....................    TimeTime=Time;                   // pri nastavovani hodnoty  
+01DC:  MOVF   3D,W
+01DD:  MOVWF  2B
+01DE:  MOVF   3C,W
+01DF:  MOVWF  2A
+....................    enable_interrupts(INT_RTCC);     // promenne (o delce vice nez 8 bitu)  
+01E0:  BSF    0B.5
+01E1:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... int1 TimerIf()  
+.................... // Vraci TRUE pokud casovac jiz dobehl  
+.................... {  
+....................    int1 Flag;                       // pomocna promenna  
+....................   
+....................    // Otestuj casovac  
+....................    disable_interrupts(INT_RTCC);    // nesmi prijit preruseni  
+01E2:  BCF    0B.5
+....................    Flag=(TimeTime==0);              // behem testu promenne  
+01E3:  MOVF   2A,F
+01E4:  BTFSS  03.2
+01E5:  GOTO   1E9
+01E6:  MOVF   2B,F
+01E7:  BTFSC  03.2
+01E8:  GOTO   1EB
+01E9:  BCF    3C.0
+01EA:  GOTO   1EC
+01EB:  BSF    3C.0
+....................    enable_interrupts(INT_RTCC);     // ted uz muze  
+01EC:  BSF    0B.5
+....................   
+....................    // Navratova hodnota  
+....................    return Flag;                     // TRUE znamena dobehl casovac  
+01ED:  MOVLW  00
+01EE:  BTFSC  3C.0
+01EF:  MOVLW  01
+01F0:  MOVWF  78
+01F1:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Globalni promenne pro akceleraci  
+.................... //   Nastavuje se metodou MotorStart()  
+.................... //   Pouziva se v obsluze preruseni IntT0()  
+.................... unsigned int8 MotorTime;            // aktualni casovac pro rozjezd  
+.................... unsigned int8 MotorDelay;           // spozdeni mezi razenim  
+.................... unsigned int8 MotorGear;            // rychlostni stupen  
+....................   
+....................   
+.................... void MotorStart(unsigned int8 Delay)  
+.................... // Provede rizeny rozjezd motoru  
+.................... {  
+....................    disable_interrupts(INT_RTCC);  
+01F2:  BCF    0B.5
+....................    MotorGear=1;  
+01F3:  MOVLW  01
+01F4:  MOVWF  2E
+....................    MotorDelay=Delay;  
+01F5:  MOVF   3C,W
+01F6:  MOVWF  2D
+....................    MotorTime=MotorDelay;  
+01F7:  MOVF   2D,W
+01F8:  MOVWF  2C
+....................    enable_interrupts(INT_RTCC);  
+01F9:  BSF    0B.5
+01FA:  MOVF   0B,W
+01FB:  ANDWF  0B,W
+01FC:  BCF    0B.7
+01FD:  MOVWF  20
+....................   
+....................    MotorPatternSet(1);  
+01FE:  MOVLW  01
+01FF:  MOVWF  43
+0200:  CALL   09B
+0201:  BTFSC  20.7
+0202:  BSF    0B.7
+0203:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... #INT_TIMER0  
+.................... void IntT0()  
+.................... // Preruseni od casovace cca 1000x za sekundu  
+.................... {  
+....................    // Odpocitavani casovace  
+....................    if (TimeTime) TimeTime--;  
+*
+00C4:  MOVF   2A,W
+00C5:  IORWF  2B,W
+00C6:  BTFSC  03.2
+00C7:  GOTO   0CC
+00C8:  MOVF   2A,W
+00C9:  BTFSC  03.2
+00CA:  DECF   2B,F
+00CB:  DECF   2A,F
+....................   
+....................    // Obsluha akcelerace  
+....................    if (MotorTime) MotorTime--;                           // dekrementuj casovac rozjezdu  
+00CC:  MOVF   2C,F
+00CD:  BTFSC  03.2
+00CE:  GOTO   0D0
+00CF:  DECF   2C,F
+....................    if ((MotorGear>0) && (MotorGear<8) && (!MotorTime))   // dalsi rychlostni stupen  
+00D0:  MOVF   2E,F
+00D1:  BTFSC  03.2
+00D2:  GOTO   0E0
+00D3:  MOVF   2E,W
+00D4:  SUBLW  07
+00D5:  BTFSS  03.0
+00D6:  GOTO   0E0
+00D7:  MOVF   2C,F
+00D8:  BTFSS  03.2
+00D9:  GOTO   0E0
+....................    {  
+....................       MotorTime=MotorDelay;         // znovu nastav casovac  
+00DA:  MOVF   2D,W
+00DB:  MOVWF  2C
+....................       MotorGear++;                  // dalsi rychlost  
+00DC:  INCF   2E,F
+....................       MotorPatternSet(MotorGear);   // nastav rychlost  
+00DD:  MOVF   2E,W
+00DE:  MOVWF  43
+00DF:  CALL   09B
+....................    }  
+00E0:  BCF    0B.2
+00E1:  BCF    0A.3
+00E2:  GOTO   026
+.................... }  
+....................   
+....................   
+.................... // Cteni dat z AD prevodniku, zadava se cislo kanalu  
+.................... int8 ReadAD(int8 Ch)  
+.................... {  
+....................    // Pokud merim Vref zapnu si jeho napajeni  
+....................    if (Ch==4) output_high(REFPOWER);  
+*
+0178:  MOVF   3C,W
+0179:  SUBLW  04
+017A:  BTFSS  03.2
+017B:  GOTO   180
+017C:  BSF    03.5
+017D:  BCF    06.1
+017E:  BCF    03.5
+017F:  BSF    06.1
+....................   
+....................    // Inicializace a cislo kanalu  
+....................    ADCON1=0x30;         // Vref+-, bez deleni hodin, Left Justify  
+0180:  MOVLW  30
+0181:  BSF    03.5
+0182:  MOVWF  1F
+....................    ADCON0=0x41+(Ch<<3); // on, Tosc/8, cislo kanalu  
+0183:  BCF    03.5
+0184:  RLF    3C,W
+0185:  MOVWF  77
+0186:  RLF    77,F
+0187:  RLF    77,F
+0188:  MOVLW  F8
+0189:  ANDWF  77,F
+018A:  MOVF   77,W
+018B:  ADDLW  41
+018C:  MOVWF  1F
+....................   
+....................    // Mereni  
+....................    delay_us(50);        // doba na prepnuti kanalu  
+018D:  MOVLW  11
+018E:  MOVWF  77
+018F:  DECFSZ 77,F
+0190:  GOTO   18F
+....................    ADCON0 |= 4;         // start prevodu  
+0191:  BSF    1F.2
+....................    delay_us(50);        // doba na prevod  
+0192:  MOVLW  11
+0193:  MOVWF  77
+0194:  DECFSZ 77,F
+0195:  GOTO   194
+....................   
+....................    // Vypnu napajeni Vref (vzdycky)  
+....................    output_low(REFPOWER);  
+0196:  BSF    03.5
+0197:  BCF    06.1
+0198:  BCF    03.5
+0199:  BCF    06.1
+....................   
+....................    // Navrat hodnoty  
+....................    return ADRESH;  
+019A:  MOVF   1E,W
+019B:  MOVWF  78
+019C:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... void main()  
+.................... {  
+....................    unsigned int8 Debug;  
+....................    unsigned int8 i;  
+*
+0204:  CLRF   04
+0205:  MOVLW  1F
+0206:  ANDWF  03,F
+0207:  BSF    03.5
+0208:  CLRF   1F
+0209:  CLRF   1D
+020A:  MOVLW  07
+020B:  BCF    03.5
+020C:  MOVWF  1F
+....................   
+....................    // Hodiny  
+....................    OSCCON = 0x62;          // 4 MHz interni RC oscilator  
+020D:  MOVLW  62
+020E:  BSF    03.5
+020F:  MOVWF  0F
+....................   
+....................    // Digitalni vystupy  
+....................    output_low(PWM);        // PWM vystup  
+0210:  BCF    06.3
+0211:  BCF    03.5
+0212:  BCF    06.3
+....................    output_low(MOTOR);      // Proud do motoru  
+0213:  BSF    03.5
+0214:  BCF    06.2
+0215:  BCF    03.5
+0216:  BCF    06.2
+....................    output_low(REFPOWER);   // Napajeni Vref  
+0217:  BSF    03.5
+0218:  BCF    06.1
+0219:  BCF    03.5
+021A:  BCF    06.1
+....................    port_b_pullups(TRUE);   // Zbyvajici vyvody portu B  
+021B:  BSF    03.5
+021C:  BCF    01.7
+....................   
+....................    // Watch Dog  
+....................    PSA=0;                  // preddelic prirazen casovaci  
+021D:  BCF    01.3
+....................    WDTCON=0x0E;            // Watch Dog cca 130ms  
+021E:  MOVLW  0E
+021F:  BCF    03.5
+0220:  BSF    03.6
+0221:  MOVWF  05
+....................   
+....................    // Analogove vstupy  
+....................    ANSEL = 0x1F;           // AN0 az AN4  
+0222:  MOVLW  1F
+0223:  BSF    03.5
+0224:  BCF    03.6
+0225:  MOVWF  1B
+....................   
+....................    // nastaveni RS232  
+....................    InitRS232();            // inicializace HW RS232 (nutno pockat cca 10ms)  
+0226:  BCF    03.5
+0227:  GOTO   0E3
+....................   
+....................    // Pipnuti (a cekani)  
+....................    for (i=1;i<30;i++)      // pocet 1/2 period  
+0228:  MOVLW  01
+0229:  MOVWF  30
+022A:  MOVF   30,W
+022B:  SUBLW  1D
+022C:  BTFSS  03.0
+022D:  GOTO   245
+....................    {  
+....................       int1 beep;           // stavova promenna pro pipak  
+....................   
+....................       output_bit(BEEP0,beep);  
+022E:  BTFSC  31.0
+022F:  GOTO   232
+0230:  BCF    05.6
+0231:  GOTO   233
+0232:  BSF    05.6
+0233:  BSF    03.5
+0234:  BCF    05.6
+....................       beep=~beep;  
+0235:  MOVLW  01
+0236:  BCF    03.5
+0237:  XORWF  31,F
+....................       output_bit(BEEP1,beep);  
+0238:  BTFSC  31.0
+0239:  GOTO   23C
+023A:  BCF    05.7
+023B:  GOTO   23D
+023C:  BSF    05.7
+023D:  BSF    03.5
+023E:  BCF    05.7
+....................       delay_us(1000);  
+023F:  MOVLW  01
+0240:  BCF    03.5
+0241:  MOVWF  3C
+0242:  CALL   0EF
+....................    }  
+0243:  INCF   30,F
+0244:  GOTO   22A
+....................   
+....................    // Rozhodnuti o rezimu cinnosti  
+....................    Debug=0;  
+0245:  CLRF   2F
+....................    if (~input(SW0)) Debug|=1;    // precti bit 0  
+0246:  BSF    03.5
+0247:  BSF    06.7
+0248:  BCF    03.5
+0249:  BTFSC  06.7
+024A:  GOTO   24C
+024B:  BSF    2F.0
+....................    if (~input(SW1)) Debug|=2;    // precti bit 1  
+024C:  BSF    03.5
+024D:  BSF    06.6
+024E:  BCF    03.5
+024F:  BTFSC  06.6
+0250:  GOTO   252
+0251:  BSF    2F.1
+....................    output_low(SW0);              // nastav L aby se snizila spotreba  
+0252:  BSF    03.5
+0253:  BCF    06.7
+0254:  BCF    03.5
+0255:  BCF    06.7
+....................    output_low(SW1);              // na obou vstupech  
+0256:  BSF    03.5
+0257:  BCF    06.6
+0258:  BCF    03.5
+0259:  BCF    06.6
+....................   
+....................    // Zobrazeni rezimu  
+....................    printf(Putc,"\fMode:%d",Debug);  
+*
+0049:  BCF    0A.0
+004A:  BCF    0A.1
+004B:  BCF    0A.2
+004C:  ADDWF  02,F
+004D:  RETLW  0C
+004E:  RETLW  4D
+004F:  RETLW  6F
+0050:  RETLW  64
+0051:  RETLW  65
+0052:  RETLW  3A
+0053:  RETLW  25
+0054:  RETLW  64
+0055:  RETLW  00
+*
+0129:  MOVF   3D,W
+012A:  MOVWF  77
+012B:  BTFSC  3D.7
+012C:  GOTO   131
+012D:  BTFSS  3E.2
+012E:  GOTO   13B
+012F:  MOVLW  20
+0130:  GOTO   136
+0131:  COMF   77,F
+0132:  INCF   77,F
+0133:  MOVF   77,W
+0134:  MOVWF  3D
+0135:  MOVLW  2D
+0136:  MOVWF  78
+0137:  MOVWF  40
+0138:  CALL   106
+0139:  BTFSS  3E.2
+013A:  BSF    3E.3
+013B:  MOVF   3D,W
+013C:  MOVWF  40
+013D:  MOVLW  64
+013E:  MOVWF  41
+013F:  CALL   114
+0140:  MOVF   77,W
+0141:  MOVWF  3D
+0142:  MOVF   78,W
+0143:  MOVLW  30
+0144:  BTFSS  03.2
+0145:  GOTO   14D
+0146:  BTFSC  3E.0
+0147:  BSF    3E.3
+0148:  BTFSC  3E.3
+0149:  GOTO   153
+014A:  BTFSC  3E.4
+014B:  MOVLW  20
+014C:  GOTO   14F
+014D:  BCF    3E.3
+014E:  BCF    3E.4
+014F:  ADDWF  78,F
+0150:  MOVF   78,W
+0151:  MOVWF  40
+0152:  CALL   106
+0153:  MOVF   3D,W
+0154:  MOVWF  40
+0155:  MOVLW  0A
+0156:  MOVWF  41
+0157:  CALL   114
+0158:  MOVF   77,W
+0159:  MOVWF  3D
+015A:  MOVF   78,W
+015B:  MOVLW  30
+015C:  BTFSS  03.2
+015D:  GOTO   162
+015E:  BTFSC  3E.3
+015F:  GOTO   166
+0160:  BTFSC  3E.4
+0161:  MOVLW  20
+0162:  ADDWF  78,F
+0163:  MOVF   78,W
+0164:  MOVWF  40
+0165:  CALL   106
+0166:  MOVLW  30
+0167:  ADDWF  3D,F
+0168:  MOVF   3D,W
+0169:  MOVWF  40
+016A:  CALL   106
+016B:  BCF    0A.3
+016C:  GOTO   269 (RETURN)
+*
+025A:  CLRF   3C
+025B:  MOVF   3C,W
+025C:  CALL   049
+025D:  INCF   3C,F
+025E:  MOVWF  40
+025F:  CALL   106
+0260:  MOVLW  06
+0261:  SUBWF  3C,W
+0262:  BTFSS  03.2
+0263:  GOTO   25B
+0264:  MOVF   2F,W
+0265:  MOVWF  3D
+0266:  MOVLW  18
+0267:  MOVWF  3E
+0268:  GOTO   129
+....................   
+....................    // Inicializace PWM  
+....................    PR2     = 0x1F;      // perioda PWM casovace  
+0269:  MOVLW  1F
+026A:  BSF    03.5
+026B:  MOVWF  12
+....................    T2CON   = 0x04;      // povoleni casovace T2 bez preddelicu a postdelicu  
+026C:  MOVLW  04
+026D:  BCF    03.5
+026E:  MOVWF  12
+....................    CCP1CON = 0x0C;      // PWM mode, lsb bity nulove  
+026F:  MOVLW  0C
+0270:  MOVWF  17
+....................    CCPR1L  =    0;      // na zacatku nulova data  
+0271:  CLRF   15
+....................    output_low(PWM);     // PWM vystup  
+0272:  BSF    03.5
+0273:  BCF    06.3
+0274:  BCF    03.5
+0275:  BCF    06.3
+....................   
+....................    // Inicializace casovace  
+....................    InitT0();            // nastav casovac na cca 1ms  
+0276:  GOTO   16D
+....................   
+....................    // Test menice PWM a rozjezdoveho PWM  
+....................    if (Debug==1)  
+0277:  DECFSZ 2F,W
+0278:  GOTO   2B0
+....................    {  
+....................       unsigned int8 Data1;       // poteniometr P1 = PWM  
+....................       unsigned int8 Data2;       // poteniometr P2 = Rozjezd  
+....................   
+....................       while (1)  
+....................       {  
+....................          // watch dog  
+....................          restart_wdt();  
+0279:  CLRWDT
+....................   
+....................          // mereni vstupu  
+....................          Data1=ReadAD(0);        // nacti parametr pro PWM  
+027A:  CLRF   3C
+027B:  CALL   178
+027C:  MOVF   78,W
+027D:  MOVWF  32
+....................          Data1>>=2;              // redukuj rozsah na 0 az 63  
+027E:  RRF    32,F
+027F:  RRF    32,F
+0280:  MOVLW  3F
+0281:  ANDWF  32,F
+....................          Data2=ReadAD(1);        // nacti parametr pro rozjezd  
+0282:  MOVLW  01
+0283:  MOVWF  3C
+0284:  CALL   178
+0285:  MOVF   78,W
+0286:  MOVWF  33
+....................          Data2>>=4;              // redukuj rozsah na 0 az 15  
+0287:  SWAPF  33,F
+0288:  MOVLW  0F
+0289:  ANDWF  33,F
+....................   
+....................          // zobrazeni  
+....................          printf(Putc,"\nPWM:%03u RUN:%03u",Data1,Data2);  
+*
+0056:  BCF    0A.0
+0057:  BCF    0A.1
+0058:  BCF    0A.2
+0059:  ADDWF  02,F
+005A:  RETLW  0A
+005B:  RETLW  50
+005C:  RETLW  57
+005D:  RETLW  4D
+005E:  RETLW  3A
+005F:  RETLW  25
+0060:  RETLW  30
+0061:  RETLW  33
+0062:  RETLW  75
+0063:  RETLW  20
+0064:  RETLW  52
+0065:  RETLW  55
+0066:  RETLW  4E
+0067:  RETLW  3A
+0068:  RETLW  25
+0069:  RETLW  30
+006A:  RETLW  33
+006B:  RETLW  75
+006C:  RETLW  00
+*
+019D:  MOVF   78,W
+019E:  MOVF   3E,W
+019F:  MOVWF  40
+01A0:  MOVLW  64
+01A1:  MOVWF  41
+01A2:  CALL   114
+01A3:  MOVF   77,W
+01A4:  MOVWF  3E
+01A5:  MOVF   78,W
+01A6:  MOVLW  30
+01A7:  BTFSS  03.2
+01A8:  GOTO   1B0
+01A9:  BTFSC  3F.0
+01AA:  BSF    3F.3
+01AB:  BTFSC  3F.3
+01AC:  GOTO   1B6
+01AD:  BTFSC  3F.4
+01AE:  MOVLW  20
+01AF:  GOTO   1B2
+01B0:  BCF    3F.3
+01B1:  BCF    3F.4
+01B2:  ADDWF  78,F
+01B3:  MOVF   78,W
+01B4:  MOVWF  40
+01B5:  CALL   106
+01B6:  MOVF   3E,W
+01B7:  MOVWF  40
+01B8:  MOVLW  0A
+01B9:  MOVWF  41
+01BA:  CALL   114
+01BB:  MOVF   77,W
+01BC:  MOVWF  3E
+01BD:  MOVF   78,W
+01BE:  MOVLW  30
+01BF:  BTFSS  03.2
+01C0:  GOTO   1C5
+01C1:  BTFSC  3F.3
+01C2:  GOTO   1C9
+01C3:  BTFSC  3F.4
+01C4:  MOVLW  20
+01C5:  ADDWF  78,F
+01C6:  MOVF   78,W
+01C7:  MOVWF  40
+01C8:  CALL   106
+01C9:  MOVLW  30
+01CA:  ADDWF  3E,F
+01CB:  MOVF   3E,W
+01CC:  MOVWF  40
+01CD:  CALL   106
+01CE:  RETLW  00
+*
+028A:  CLRF   3C
+028B:  MOVF   3C,W
+028C:  CALL   056
+028D:  INCF   3C,F
+028E:  MOVWF  40
+028F:  CALL   106
+0290:  MOVLW  05
+0291:  SUBWF  3C,W
+0292:  BTFSS  03.2
+0293:  GOTO   28B
+0294:  MOVF   32,W
+0295:  MOVWF  3E
+0296:  CLRF   3F
+0297:  CALL   19D
+0298:  MOVLW  09
+0299:  MOVWF  3D
+029A:  MOVF   3D,W
+029B:  CALL   056
+029C:  INCF   3D,F
+029D:  MOVWF  40
+029E:  CALL   106
+029F:  MOVLW  0E
+02A0:  SUBWF  3D,W
+02A1:  BTFSS  03.2
+02A2:  GOTO   29A
+02A3:  MOVF   33,W
+02A4:  MOVWF  3E
+02A5:  CLRF   3F
+02A6:  CALL   19D
+....................          delay_ms(20);  
+02A7:  MOVLW  14
+02A8:  MOVWF  3C
+02A9:  CALL   0EF
+....................   
+....................          // nastaveni parametru PWM  
+....................          CCPR1L = Data1;  
+02AA:  MOVF   32,W
+02AB:  MOVWF  15
+....................   
+....................          // nastaveni parametru RUN  
+....................          MotorSet(Data2);  
+02AC:  MOVF   33,W
+02AD:  MOVWF  3C
+02AE:  CALL   1CF
+....................       }  
+02AF:  GOTO   279
+....................    }  
+....................   
+....................    // Testovani rozjezdu  
+....................    // Zadava se cas mezi stupni razeni pro rozjezd v ms  
+....................    if (Debug==2)  
+02B0:  MOVF   2F,W
+02B1:  SUBLW  02
+02B2:  BTFSS  03.2
+02B3:  GOTO   300
+....................    {  
+....................       int8 Data;  
+....................       int8 Start;  
+....................   
+....................       Start=0;                               // uvodni stav  
+02B4:  CLRF   35
+....................       while(1)  
+....................       {  
+....................          // Nacti a zobraz parametr  
+....................          Data=ReadAD(1);                     // potenciometr P2 = rozjezd  
+02B5:  MOVLW  01
+02B6:  MOVWF  3C
+02B7:  CALL   178
+02B8:  MOVF   78,W
+02B9:  MOVWF  34
+....................          printf(Putc,"\nRUN: %3ums ",Data);  // zobraz  
+*
+006D:  BCF    0A.0
+006E:  BCF    0A.1
+006F:  BCF    0A.2
+0070:  ADDWF  02,F
+0071:  RETLW  0A
+0072:  RETLW  52
+0073:  RETLW  55
+0074:  RETLW  4E
+0075:  RETLW  3A
+0076:  RETLW  20
+0077:  RETLW  25
+0078:  RETLW  33
+0079:  RETLW  75
+007A:  RETLW  6D
+007B:  RETLW  73
+007C:  RETLW  20
+007D:  RETLW  00
+*
+02BA:  CLRF   3C
+02BB:  MOVF   3C,W
+02BC:  CALL   06D
+02BD:  INCF   3C,F
+02BE:  MOVWF  40
+02BF:  CALL   106
+02C0:  MOVLW  06
+02C1:  SUBWF  3C,W
+02C2:  BTFSS  03.2
+02C3:  GOTO   2BB
+02C4:  MOVF   34,W
+02C5:  MOVWF  3E
+02C6:  MOVLW  10
+02C7:  MOVWF  3F
+02C8:  CALL   19D
+02C9:  MOVLW  6D
+02CA:  MOVWF  40
+02CB:  CALL   106
+02CC:  MOVLW  73
+02CD:  MOVWF  40
+02CE:  CALL   106
+02CF:  MOVLW  20
+02D0:  MOVWF  40
+02D1:  CALL   106
+....................          delay_ms(10);                       // prodleva pro terminal  
+02D2:  MOVLW  0A
+02D3:  MOVWF  3C
+02D4:  CALL   0EF
+....................   
+....................          // Uvodni pauza  
+....................          if (Start==0)                       // spousti se 1x na zacatku  
+02D5:  MOVF   35,F
+02D6:  BTFSS  03.2
+02D7:  GOTO   2DE
+....................          {  
+....................             Start++;                         // dalsi stav je cekani  
+02D8:  INCF   35,F
+....................             TimerSet(2000);                  // na dokonceni uvodni prodlevy  
+02D9:  MOVLW  07
+02DA:  MOVWF  3D
+02DB:  MOVLW  D0
+02DC:  MOVWF  3C
+02DD:  CALL   1DB
+....................          }  
+....................   
+....................          // Rozjezd  
+....................          if ((Start==1) && TimerIf())  
+02DE:  DECFSZ 35,W
+02DF:  GOTO   2F0
+02E0:  CALL   1E2
+02E1:  MOVF   78,F
+02E2:  BTFSC  03.2
+02E3:  GOTO   2F0
+....................          {  
+....................             Start++;  
+02E4:  INCF   35,F
+....................             printf(Putc,"R");  
+02E5:  MOVLW  52
+02E6:  MOVWF  40
+02E7:  CALL   106
+....................             MotorStart(Data);                // rozjezd s nastavenim prodlevy  
+02E8:  MOVF   34,W
+02E9:  MOVWF  3C
+02EA:  CALL   1F2
+....................   
+....................             TimerSet(2000);                  // nastav celkovy cas jizdy  
+02EB:  MOVLW  07
+02EC:  MOVWF  3D
+02ED:  MOVLW  D0
+02EE:  MOVWF  3C
+02EF:  CALL   1DB
+....................          }  
+....................   
+....................          // Zastaveni  
+....................          if ((Start==2) && TimerIf())  
+02F0:  MOVF   35,W
+02F1:  SUBLW  02
+02F2:  BTFSS  03.2
+02F3:  GOTO   2FE
+02F4:  CALL   1E2
+02F5:  MOVF   78,F
+02F6:  BTFSC  03.2
+02F7:  GOTO   2FE
+....................          {  
+....................             Start++;  
+02F8:  INCF   35,F
+....................             printf(Putc,"S");  
+02F9:  MOVLW  53
+02FA:  MOVWF  40
+02FB:  CALL   106
+....................             MotorSet(0);                     // pokud dobehl casovac zastav motor  
+02FC:  CLRF   3C
+02FD:  CALL   1CF
+....................          }  
+....................   
+....................          // watch dog  
+....................          restart_wdt();  
+02FE:  CLRWDT
+....................       }  
+02FF:  GOTO   2B5
+....................    }  
+....................   
+....................    // Test nabijeciho algoritmu  
+....................    if (Debug==3)  
+0300:  MOVF   2F,W
+0301:  SUBLW  03
+0302:  BTFSS  03.2
+0303:  GOTO   35A
+....................    {  
+....................       unsigned int8 PwmOut;   // akcni hodnota pro PWM  
+....................       unsigned int8 Req;      // pozadovana hodnota z P1  
+....................       unsigned int8 Vref;     // merena hodnota vref  
+....................   
+....................       // Inicializace stavove promenne  
+....................       PwmOut=0;  
+0304:  CLRF   36
+....................   
+....................       // Hlavni smycka  
+....................       while (1)  
+....................       {  
+....................          // watch dog  
+....................          restart_wdt();  
+0305:  CLRWDT
+....................   
+....................          // pozadovana hodnota (potenciometr P1)  
+....................          Req=ReadAD(0);  
+0306:  CLRF   3C
+0307:  CALL   178
+0308:  MOVF   78,W
+0309:  MOVWF  37
+....................          Req=50+(ReadAD(0)>>1);                      // 50 az 177  
+030A:  CLRF   3C
+030B:  CALL   178
+030C:  BCF    03.0
+030D:  RRF    78,W
+030E:  MOVWF  77
+030F:  ADDLW  32
+0310:  MOVWF  37
+....................   
+....................          // napeti na napajeni (vref)  
+....................          Vref=ReadAD(4);  
+0311:  MOVLW  04
+0312:  MOVWF  3C
+0313:  CALL   178
+0314:  MOVF   78,W
+0315:  MOVWF  38
+....................   
+....................          // ricici algoritmus  
+....................          if ((Vref<Req) &&(PwmOut<30)) PwmOut++;  
+0316:  MOVF   37,W
+0317:  SUBWF  38,W
+0318:  BTFSC  03.0
+0319:  GOTO   31F
+031A:  MOVF   36,W
+031B:  SUBLW  1D
+031C:  BTFSS  03.0
+031D:  GOTO   31F
+031E:  INCF   36,F
+....................          if ((Vref>=Req)&&(PwmOut> 0)) PwmOut--;  
+031F:  MOVF   37,W
+0320:  SUBWF  38,W
+0321:  BTFSS  03.0
+0322:  GOTO   327
+0323:  MOVF   36,F
+0324:  BTFSC  03.2
+0325:  GOTO   327
+0326:  DECF   36,F
+....................          Vref+=10;  
+0327:  MOVLW  0A
+0328:  ADDWF  38,F
+....................          if ((Vref<(Req))&&(PwmOut<30)) PwmOut++;    // urychleni nabehu  
+0329:  MOVF   37,W
+032A:  SUBWF  38,W
+032B:  BTFSC  03.0
+032C:  GOTO   332
+032D:  MOVF   36,W
+032E:  SUBLW  1D
+032F:  BTFSS  03.0
+0330:  GOTO   332
+0331:  INCF   36,F
+....................   
+....................          // nastaveni parametru PWM  
+....................          if (PwmOut>24) PwmOut=24;     // saturace  
+0332:  MOVF   36,W
+0333:  SUBLW  18
+0334:  BTFSC  03.0
+0335:  GOTO   338
+0336:  MOVLW  18
+0337:  MOVWF  36
+....................          CCPR1L = PwmOut;              // pouziti vystupu  
+0338:  MOVF   36,W
+0339:  MOVWF  15
+....................   
+....................          // zobrazeni  
+....................          printf(Putc,"\nALG:%03u %03u %03u",Req,Vref,PwmOut);  
+*
+007E:  BCF    0A.0
+007F:  BCF    0A.1
+0080:  BCF    0A.2
+0081:  ADDWF  02,F
+0082:  RETLW  0A
+0083:  RETLW  41
+0084:  RETLW  4C
+0085:  RETLW  47
+0086:  RETLW  3A
+0087:  RETLW  25
+0088:  RETLW  30
+0089:  RETLW  33
+008A:  RETLW  75
+008B:  RETLW  20
+008C:  RETLW  25
+008D:  RETLW  30
+008E:  RETLW  33
+008F:  RETLW  75
+0090:  RETLW  20
+0091:  RETLW  25
+0092:  RETLW  30
+0093:  RETLW  33
+0094:  RETLW  75
+0095:  RETLW  00
+*
+033A:  CLRF   3C
+033B:  MOVF   3C,W
+033C:  CALL   07E
+033D:  INCF   3C,F
+033E:  MOVWF  40
+033F:  CALL   106
+0340:  MOVLW  05
+0341:  SUBWF  3C,W
+0342:  BTFSS  03.2
+0343:  GOTO   33B
+0344:  MOVF   37,W
+0345:  MOVWF  3E
+0346:  CLRF   3F
+0347:  CALL   19D
+0348:  MOVLW  20
+0349:  MOVWF  40
+034A:  CALL   106
+034B:  MOVF   38,W
+034C:  MOVWF  3E
+034D:  CLRF   3F
+034E:  CALL   19D
+034F:  MOVLW  20
+0350:  MOVWF  40
+0351:  CALL   106
+0352:  MOVF   36,W
+0353:  MOVWF  3E
+0354:  CLRF   3F
+0355:  CALL   19D
+....................          delay_ms(10);  
+0356:  MOVLW  0A
+0357:  MOVWF  3C
+0358:  CALL   0EF
+....................       }  
+0359:  GOTO   305
+....................    }  
+....................   
+....................    // Standardni beh  
+....................    if (Debug==0)  
+035A:  MOVF   2F,F
+035B:  BTFSS  03.2
+035C:  GOTO   3C3
+....................    {  
+....................       unsigned int8 PwmOut;   // akcni hodnota pro PWM  
+....................       unsigned int8 Req;      // pozadovana hodnota z P1  
+....................       unsigned int8 Vref;     // merena hodnota vref  
+....................       int1 Run;  
+....................   
+....................       // Inicializace stavove promenne  
+....................       PwmOut=0;  
+035D:  CLRF   39
+....................       TimerSet(14000);        // casovani startu  
+035E:  MOVLW  36
+035F:  MOVWF  3D
+0360:  MOVLW  B0
+0361:  MOVWF  3C
+0362:  CALL   1DB
+....................       Run=1;  
+0363:  BSF    31.1
+....................   
+....................       // Hlavni smycka  
+....................       while (1)  
+....................       {  
+....................          // watch dog  
+....................          restart_wdt();  
+0364:  CLRWDT
+....................   
+....................          // pozadovana hodnota (potenciometr P1)  
+....................          Req=ReadAD(0);  
+0365:  CLRF   3C
+0366:  CALL   178
+0367:  MOVF   78,W
+0368:  MOVWF  3A
+....................          Req=50+(ReadAD(0)>>1);                      // 50 az 177  
+0369:  CLRF   3C
+036A:  CALL   178
+036B:  BCF    03.0
+036C:  RRF    78,W
+036D:  MOVWF  77
+036E:  ADDLW  32
+036F:  MOVWF  3A
+....................   
+....................          // napeti na napajeni (vref)  
+....................          Vref=ReadAD(4);  
+0370:  MOVLW  04
+0371:  MOVWF  3C
+0372:  CALL   178
+0373:  MOVF   78,W
+0374:  MOVWF  3B
+....................   
+....................          // ricici algoritmus  
+....................          if ((Vref<Req) &&(PwmOut<30)) PwmOut++;  
+0375:  MOVF   3A,W
+0376:  SUBWF  3B,W
+0377:  BTFSC  03.0
+0378:  GOTO   37E
+0379:  MOVF   39,W
+037A:  SUBLW  1D
+037B:  BTFSS  03.0
+037C:  GOTO   37E
+037D:  INCF   39,F
+....................          if ((Vref>=Req)&&(PwmOut> 0)) PwmOut--;  
+037E:  MOVF   3A,W
+037F:  SUBWF  3B,W
+0380:  BTFSS  03.0
+0381:  GOTO   386
+0382:  MOVF   39,F
+0383:  BTFSC  03.2
+0384:  GOTO   386
+0385:  DECF   39,F
+....................          Vref+=10;  
+0386:  MOVLW  0A
+0387:  ADDWF  3B,F
+....................          if ((Vref<(Req))&&(PwmOut<30)) PwmOut++;    // urychleni nabehu  
+0388:  MOVF   3A,W
+0389:  SUBWF  3B,W
+038A:  BTFSC  03.0
+038B:  GOTO   391
+038C:  MOVF   39,W
+038D:  SUBLW  1D
+038E:  BTFSS  03.0
+038F:  GOTO   391
+0390:  INCF   39,F
+....................   
+....................          // nastaveni parametru PWM  
+....................          if (PwmOut>24) PwmOut=24;     // saturace  
+0391:  MOVF   39,W
+0392:  SUBLW  18
+0393:  BTFSC  03.0
+0394:  GOTO   397
+0395:  MOVLW  18
+0396:  MOVWF  39
+....................          CCPR1L = PwmOut;              // pouziti vystupu  
+0397:  MOVF   39,W
+0398:  MOVWF  15
+....................   
+....................          // zobrazeni  
+....................          printf(Putc,"\nALG:%03u %03u %03u",Req,Vref,PwmOut);  
+0399:  CLRF   3C
+039A:  MOVF   3C,W
+039B:  CALL   07E
+039C:  INCF   3C,F
+039D:  MOVWF  40
+039E:  CALL   106
+039F:  MOVLW  05
+03A0:  SUBWF  3C,W
+03A1:  BTFSS  03.2
+03A2:  GOTO   39A
+03A3:  MOVF   3A,W
+03A4:  MOVWF  3E
+03A5:  CLRF   3F
+03A6:  CALL   19D
+03A7:  MOVLW  20
+03A8:  MOVWF  40
+03A9:  CALL   106
+03AA:  MOVF   3B,W
+03AB:  MOVWF  3E
+03AC:  CLRF   3F
+03AD:  CALL   19D
+03AE:  MOVLW  20
+03AF:  MOVWF  40
+03B0:  CALL   106
+03B1:  MOVF   39,W
+03B2:  MOVWF  3E
+03B3:  CLRF   3F
+03B4:  CALL   19D
+....................          delay_ms(10);  
+03B5:  MOVLW  0A
+03B6:  MOVWF  3C
+03B7:  CALL   0EF
+....................   
+....................          // rozjezd  
+....................          if (TimerIf()&&Run)  
+03B8:  CALL   1E2
+03B9:  MOVF   78,F
+03BA:  BTFSC  03.2
+03BB:  GOTO   3C2
+03BC:  BTFSS  31.1
+03BD:  GOTO   3C2
+....................          {  
+....................             Run=0;  
+03BE:  BCF    31.1
+....................             MotorStart(65);  
+03BF:  MOVLW  41
+03C0:  MOVWF  3C
+03C1:  CALL   1F2
+....................          }  
+....................       }  
+03C2:  GOTO   364
+....................    }  
+.................... }  
+....................  
+03C3:  SLEEP

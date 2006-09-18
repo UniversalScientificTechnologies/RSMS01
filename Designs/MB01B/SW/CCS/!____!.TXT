@@ -1,0 +1,2 @@
+Tento DEVICES.DAT je vzaty z demoverze prekladace protoze obsahuje vice deifinic
+procesoru.

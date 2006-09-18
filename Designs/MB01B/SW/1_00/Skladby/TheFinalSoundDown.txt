@@ -1,0 +1,61 @@
+// Pisnicka "The Final Sound Down"
+//
+// Tato pisnicka je napsana ve formatu, ktery se da pouzit jak pro primy
+// preklad do firmwaru melodickeho zvonku tak i pro dodatecne nahrani
+
+BEGIN    3,             // Zacatek skladby
+TEMPO    100,           // Delka nejkratsi noty v ms
+PAUSE    100,           // Delka mezery mezi notami
+
+1  A     1,
+1  G     1,
+1  A     4,
+1  D     4,
+   Space 2,
+
+1  Ais   1,
+1  A     1,
+1  Ais   2,
+1  A     2,
+1  G     4,
+   Space 2,
+
+1  Ais   1,
+1  A     1,
+1  Ais   4,
+1  D     4,
+   Space 2,
+
+1  G     1,
+1  F     1,
+1  G     2,
+1  F     2,
+1  E     2,
+1  G     2,
+1  F     4,
+   Space 2,
+
+1  E     1,
+1  F     1,
+1  G     4,
+   Space 2,
+
+1  F     1,
+1  G     1,
+1  A     2,
+1  G     2,
+1  F     2,
+1  E     2,
+1  D     4,
+1  Ais   4,
+1  A     4,
+   Space 2,
+
+1  A     1,
+1  Ais   1,
+1  A     1,
+1  G     1,
+1  A     4,
+   Space 2,
+
+END

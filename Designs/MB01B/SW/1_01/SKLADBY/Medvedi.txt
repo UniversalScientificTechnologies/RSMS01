@@ -1,0 +1,173 @@
+// Pisnicka "Medvedi"
+//
+// Tato pisnicka je napsana ve formatu, ktery se da pouzit jak pro primy
+// preklad do firmwaru melodickeho zvonku tak i pro dodatecne nahrani
+
+BEGIN    1,             // Zacatek skladby
+TEMPO    150,           // Delka nejkratsi noty v ms
+PAUSE    100,           // Delka mezery mezi notami
+
+1  C     1,             // 1
+1  C     1,
+1  C     1,
+1  E     1,
+1  D     1,
+0  G     1,
+
+1  C     3,             // 2
+   Space 4,
+
+1  E     1,             // 3
+1  E     1,
+1  E     1,
+1  E     1,
+1  D     1,
+1  G     1,
+
+1  E     2,             // 4
+   Space 4,
+
+1  G     1,             // 5
+1  G     1,
+1  A     1,
+1  G     1,
+1  F     1,
+1  E     1,
+
+1  F     1,             // 6
+1  A     1,
+1  G     1,
+1  F     1,
+1  E     1,
+1  D     1,
+
+1  C     1,             // 7
+0  H     1,
+1  C     1,
+1  E     1,
+1  D     1,
+0  G     1,
+
+1  C     3,             // 8
+   Space 4,
+1  A     1,             // 9
+1  A     1,
+1  A     1,
+1  A     1,
+1  H     1,
+2  D     1,
+
+2  C     4,             // 10
+   Space 2,
+
+2  E     1,             // 11
+2  E     1,
+2  E     1,
+2  E     1,
+2  D     1,
+2  G     1,
+
+2  E     4,             // 12
+   Space 2,
+
+2  G     1,             // 13
+2  G     1,
+2  A     1,
+2  G     1,
+2  F     1,
+2  E     1,
+
+2  F     1,             // 14
+2  A     1,
+2  G     1,
+2  F     1,
+2  E     1,
+2  D     1,
+
+2  C     1,             // 15
+1  H     1,
+2  C     1,
+2  E     1,
+2  D     1,
+1  G     1,
+
+2  C     4,             // 16
+   Space 2,
+
+1  C     6,             // 1
+0  G     2,
+
+1  D     3,             // 2
+   Space 3,
+
+1  G     1,             // 3
+1  G     1,
+1  Fis   1,
+1  G     1,
+1  A     1,
+1  Fis   1,
+
+1  G     2,             // 4
+   Space 4,
+
+1  G     1,             // 5
+1  G     1,
+1  A     1,
+1  G     1,
+1  F     1,
+1  E     1,
+
+1  F     1,             // 6
+1  A     1,
+1  G     1,
+1  F     1,
+1  E     1,
+1  D     1,
+
+1  C     6,             // 7
+1  E     2,
+
+1  D     3,             // 8
+   Space 3,
+
+1  C     6,             // 9
+0  G     2,
+
+1  D     3,             // 10
+   Space 3,
+
+1  G     1,             // 11
+1  G     1,
+1  Fis   1,
+1  G     1,
+1  A     1,
+1  Fis   1,
+
+1  G     2,             // 12
+   Space 4,
+
+1  G     1,             // 13
+1  G     1,
+1  A     1,
+1  G     1,
+1  F     1,
+1  E     1,
+
+1  F     1,             // 14
+1  A     1,
+1  G     1,
+1  F     1,
+1  E     1,
+1  D     1,
+
+1  C     1,             // 15
+0  H     1,
+1  C     1,
+1  E     1,
+1  D     1,
+0  G     1,
+
+1  C     2,             // 16
+   Space 4,
+
+END

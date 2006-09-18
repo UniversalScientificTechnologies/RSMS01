@@ -1,0 +1,27 @@
+// Testovaci posloupnost vsech not
+//
+// Tento soubor nelze vlozit do zdrojaku, da se jen natahnout po seriovce
+// Nezapomente prosim, ze delka radky s notami je maximalne 40 znaku
+
+BEGIN    0,             // Zacatek skladby bez posunuti oktavy
+TEMPO    2000,          // Kazdy ton bude znit 2s aby se dala zmerit frekvence
+PAUSE    100,           // Delka mezery mezi notami
+
+0 C Cis D Dis E F Fis G Gis A Ais H 
+Space
+1 C Cis D Dis E F Fis G Gis A Ais H 
+Space
+2 C Cis D Dis E F Fis G Gis A Ais H 
+Space
+3 C Cis D Dis E F Fis G Gis A Ais H 
+Space
+4 C Cis D Dis E F Fis G Gis A Ais H 
+Space
+5 C Cis D Dis E F Fis G Gis A Ais H 
+Space
+6 C Cis D Dis E F Fis G Gis A Ais H 
+Space
+7 C Cis D Dis E F Fis G Gis A Ais H 
+Space
+
+END

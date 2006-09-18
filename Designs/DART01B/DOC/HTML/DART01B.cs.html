@@ -1,0 +1,1067 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3c.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title> DART01B </title>
+    <meta name="keywords" content="stavebnice MLAB solární vozítko robot DART ">
+    <meta name="description" content="Projekt MLAB, Solární vozítko DART">
+    <!-- AUTOINCLUDE START "Page/Head.cs.ihtml" DO NOT REMOVE -->
+    <link rel="StyleSheet" href="../../../../Web/CSS/MLAB.css" type="text/css" title="MLAB základní styl">
+    <link rel="shortcut icon" type="image/x-icon" href="Web/PIC/MLAB.ico">
+    <script type="text/javascript" src="../../../../Web/JS/MLAB_Menu.js"></script>
+    <!-- AUTOINCLUDE END -->
+  </head>
+
+  <body lang="cs">
+
+    <!-- AUTOINCLUDE START "Page/Header.cs.ihtml" DO NOT REMOVE -->
+    <!-- ============== HLAVICKA ============== -->
+    <div class="Header">
+      <script type="text/javascript">
+      <!--
+        SetRelativePath("../../../../");
+        DrawHeader();
+      // -->
+      </script>
+      <noscript>
+        <p><b> Pro zobrazení (vložení) hlavičky je potřeba JavaScript </b></p>
+      </noscript>
+    </div>
+    <!-- AUTOINCLUDE END -->
+
+    <!-- AUTOINCLUDE START "Page/Menu.cs.ihtml" DO NOT REMOVE -->
+    <!-- ============== MENU ============== -->
+    <div class="Menu">
+      <script type="text/javascript">
+      <!--
+        SetRelativePath("../../../../");
+        DrawMenu();
+      // -->
+      </script>
+      <noscript>
+        <p><b> Pro zobrazení (vložení) menu je potřeba JavaScript </b></p>
+      </noscript>
+    </div>
+    <!-- AUTOINCLUDE END -->
+
+    <!-- ============== TEXT ============== -->
+    <div class="Text">
+      <p class="Title">
+        DART – solární vozítko s měničem
+      </p>
+      <p class=Autor>
+        Milan Horkel
+      </p>
+      <p class="Subtitle">
+        Popisovaná konstrukce je experimentálním vozítkem pro
+        závody solárních modelů. Je zde stručně uvedena mechanická konstrukce a
+        konstrukce elektroniky obsahující měnič a řídící procesor pro řízení
+        měniče a startu vozítka. Varianta s&nbsp;běžným tranzistorem.
+      </p>
+      <p class=Subtitle>
+        <img width=358 height=333 src="Pictures/image001.jpg"
+         alt="">
+      </p>
+      <p class="Center">
+        Obrázek zobrazuje elektroniku ve variantě DART01A
+      </p>
+      <p class=Subtitle>
+        <img width=228 height=160 src="Pictures/image002.jpg"
+         alt="">
+        <img width=227 height=148 src="Pictures/image003.jpg"
+         alt="">
+      </p>
+      <p>
+        <a href="../DART01B.cs.pdf"><img class="NoBorder"
+           src="../../../../Web/PIC/FileIco_PDF.ico"
+           alt="Acrobat">&nbsp;PDF verze</a>
+      </p>
+
+      <h1> Technické údaje </h1>
+
+      <table>
+        <tr>
+          <th> Parametr </th>
+          <th> Hodnota  </th>
+          <th> Poznámka </th>
+        </tr>
+        <tr>
+          <td> Napájení </td>
+          <td> 8ks slunečních článků </td>
+          <td> cca 65mW </td>
+        </tr>
+        <tr>
+          <td> Akumulační prvek    </td>
+          <td> Kondenzátor 10G/16V </td>
+          <td> Maximálně do 18V (omezeno ZD)</td>
+        </tr>
+        <tr>
+          <td> Maximální energie </td>
+          <td> 1.3J / 1.6J       </td>
+          <td> Při 16V / 18V     </td>
+        </tr>
+        <tr>
+          <td> Řízení </td>
+          <td> Procesor PIC16F88 </td>
+          <td> AD převodník, PWM, SSP, časovač </td>
+        </tr>
+        <tr>
+          <td> Hmotnost </td>
+          <td> 70g      </td>
+          <td> Elektronika z&nbsp;toho 20g </td>
+        </tr>
+        <tr>
+          <td> Rozměry </td>
+          <td> 155x115x100mm </td>
+          <td> Elektronika 49x31x38mm </td>
+        </tr>
+      </table>
+
+      <h1> Úvodem </h1>
+
+      <p>
+        Konstrukce solárního vozítka vyžaduje mnoho experimentální.
+        Vznikla proto robustní mechanická konstrukce podvozku s&nbsp;oddělitelnými
+        slunečními články a samostatná deska elektroniky. Většinu ladění a experimentů
+        lze udělat tak, že se na podvozek umístí závaží odpovídající váze slunečních
+        článků a elektroniky (osvědčila se 9V baterie) a podvozek se propojí tenkým
+        drátem (lakovaný drát 0.2mm) s&nbsp;elektronikou, která leží na pracovním
+        stole. Na sluneční články lze svítit obyčejnou stolní lampou, jen je třeba
+        zvolit vhodnou vzdálenost, aby množství energie odpovídalo soutěžnímu
+        osvětlení. Do místa dojezdu je vhodné dát polštář aby se podvozek nepotloukl.
+      </p>
+
+      <p>
+        Všechna dosavadní solární vozítka (na soutěžích v&nbsp;Ostravě), která
+        nějakým způsobem akumulovala energii se snažila nabít přímo ze slunečních
+        článků velký kondenzátor a ten pak vybít do motoru. Tento proces má dvě úskalí.
+      </p>
+
+      <p>
+        Za prvé sluneční články dávají maximální výkon jen při určitém napětí
+        (2.5 až 3V při 8 článcích dle úrovně osvětlení). Tedy při připojení
+        slunečních článků na vybitý kondenzátor je většina energie nevyužita
+        (velký proud ale nepatrné napětí dají nepatrný výkon).
+      </p>
+
+      <p>
+        Druhým kamenem úrazu je to, jak dostat co nejvíce energie
+        z&nbsp;kondenzátoru do motoru. Prosté připojení motoru je velmi
+        neefektivní, mnohem výhodnější je postupný rozjezd. V&nbsp;autě se
+        také nerozjíždíme na pětku i když nakonec chceme jet co nejrychleji.
+        Komplikací je i ta skutečnost, že část energie v&nbsp;kondenzátoru
+        zbývá nevyužita protože napětí na kondenzátoru neklesne na nulu.
+      </p>
+
+      <p class="Remark">
+        Varianta „B“ elektroniky se od varianty „A“ liší jen tím, že byl použit
+        dvojitý FET v&nbsp;obyčejném pouzdře SO8 (původní tranzistor byl
+        poněkud exotický) a na plošný spoj byla doplněna možnost osazení LED
+        (bliknutí je vidět i v&nbsp;hlučném prostředí ale stávající program
+        ji nevyužívá).
+      </p>
+
+      <h2> Koncepce řešení </h2>
+
+      <p>
+        První problém lze v&nbsp;podstatě bezezbytku vyřešit tím, že mezi
+        baterii slunečních článků a akumulační kondenzátor umístíme měnič, který
+        řídíme tak, aby bylo na slunečních článcích optimální napětí. Zaplatíme
+        za to tím, že se část energie ztratí v&nbsp;měniči (účinnost cca 80%)
+        a část energie spotřebuje procesor na řízení měniče (cca 1mA).
+        Procesor ale stejně potřebujeme protože to je nejsnazší způsob jak
+        zajistit start vozítka v&nbsp;definovaném čase (dle pravidel 15s).
+      </p>
+
+      <p>
+        Energie z&nbsp;akumulačního kondenzátoru přivedeme do motoru „po kouskách“
+        tak, že při rozjezdu budeme nejprve krátce spínat proud do motoru
+        a během rozjezdu budeme postupně přidávat. Bohužel část energie
+        v&nbsp;kondenzátoru zůstane nevyužita (napětí neklesne k&nbsp;nule).
+        Aby tato část byla co nejmenší je vhodné volit kondenzátor raději menší
+        kapacity ale na větší napětí. Napětí je omezeno hlavně průrazným napětím
+        použitých tranzistorů.
+      </p>
+
+      <h2> Dosažené výsledky </h2>
+
+      <p>
+        Předběžné dosažené výsledky ukazují, že celkový výsledek je schopný
+        konkurovat nejlepším konstrukcím z&nbsp;předchozích ročníků soutěže
+        solárních vozítek. Zvýšená spotřeba elektroniky a její hmotnost je
+        s&nbsp;rezervou vyvážena lepším využitím energie ze slunečních článků.
+      </p>
+
+      <h1> Mechanická konstrukce </h1>
+
+      <p>
+        Mechanická konstrukce se skládá ze 3 částí:
+      </p>
+
+      <table>
+        <tr>
+          <th> Část     </th>
+          <th> Hmotnost </th>
+          <th> Celkem   </th>
+        </tr>
+        <tr>
+          <td> Podvozek s motorem </td>
+          <td> 35g                </td>
+          <td rowspan=3> 69g      </td>
+        </tr>
+        <tr>
+          <td> Panel slunečních článků </td>
+          <td> 14g </td>
+        </tr>
+        <tr>
+          <td> Elektronika </td>
+          <td> 20g (z toho kondenzátor 13g) </td>
+        </tr>
+      </table>
+
+      <p>
+        Podvozek je samostatný prvek a panel slunečních článků je k&nbsp;němu
+        připevněn pomocí stojin z&nbsp;hliníkové trubičky Ø3mm, které lze
+        oddělit jak od podvozku, tak i od panelu slunečních článků. Elektronika
+        je připevněna pomocí gumičky.
+      </p>
+
+      <h2> Podvozek </h2>
+
+      <p>
+        Podvozek je slepený z&nbsp;balzového dřeva a smrkových latiček.
+        Provedení je určeno použitým motorem a převody. Motor i převody
+        pochází z&nbsp;nefunkční CD ROM mechaniky. Podvozek byl stavěn spíše
+        robustní aby něco vydržel a jistě by jej bylo možné odlehčit.
+      </p>
+
+      <p>
+        Kola (standardní modelářská) jsou spolu s&nbsp;velkým ozubeným kolem
+        převodu nasazena (a přilepena) na osu, kterou tvoří hliníková
+        trubička Ø3mm. Na ose jsou dále přilepena 2 kuličková ložiska za která
+        je náprava uchycena do podvozku (ložiska nejsou k&nbsp;podvozku přilepena).
+        Ložiska pocházejí ze starého pevného disku.
+      </p>
+
+      <p>
+        Přední kolo má pneumatiku z&nbsp;malého modelářského kolečka
+        a náboj tvoří opět malé kuličkové ložisko s&nbsp;osou z&nbsp;hliníkové
+        trubičky. Kolečko musí být dobře připevněno k&nbsp;podvozku aby se neulomilo
+        při tvrdém dojezdu.
+      </p>
+
+      <p>
+        Stojiny jsou zasunuty v&nbsp;trubičkách z&nbsp;hnědé papírové lepenky.
+        Tyto trubičky jsou epoxidovým lepidlem zalepeny do podvozku.
+        Podrobnosti jsou patrné z&nbsp;přiložených obrázků.
+      </p>
+
+      <p>
+        <img width=268 height=189 src="Pictures/image005.jpg"
+         alt="Podvozek, pohled zhora">
+        <img width=170 height=190 src="Pictures/image006.jpg"
+         alt="Převodovka">
+        <img width=143 height=188 src="Pictures/image007.jpg"
+         alt="Přední kolo">
+      </p>
+
+      <h2> Panel slunečních článků </h2>
+
+      <p>
+        Sluneční články jsou velmi křehké a je tedy nezbytné náležitě je chránit
+        před poškozením. Ke každému článku jsou zespoda připájeny 2 tenké dráty
+        za které jsou přichyceny k&nbsp;podložce z&nbsp;1mm balzy. Okraj podložky
+        je zpevněn latičkami 2x3mm. Vpředu a vzadu jsou přilepené trubičky
+        z&nbsp;papírové lepenky pro nasazení panelu na stojky. Všechny články
+        jsou zapojené v&nbsp;sérii a vývod je opatřen kablíkem s&nbsp;konektorem.
+      </p>
+
+      <p>
+        <img width=209 height=189 src="Pictures/image008.jpg"
+         alt="Solární články">
+        <img width=105 height=188 src="Pictures/image009.jpg"
+         alt="Připevnění stojin">
+      </p>
+
+      <h1> Elektronika </h1>
+
+      <h2> Blokové schéma </h2>
+
+      <p>
+        <img width=465 height=227 src="Pictures/image010.gif"
+         alt="Blokové schéma">
+      </p>
+
+      <p>
+        Srdcem elektroniky je jednočipový procesor PIC16F88, který zajišťuje
+        kompletní řízení jak měniče (pomocí PWM jednotky a AD převodníku) tak
+        i rozjezdu (pomocí SSP jednotky).
+      </p>
+
+      <p>
+        Napájení zajišťuje panel slunečních článků. Získaná energie
+        se měničem střídá do akumulačního kondenzátoru odkud se pak spínačem
+        motoru využívá pro rozjezd vozítka.
+      </p>
+
+      <p>
+        K&nbsp;procesoru jsou připojeny 2 odporové trimry, jejichž nastavení
+        lze přečíst pomocí AD převodníku a mohou se použít pro nastavení
+        parametrů řídících algoritmů. Přepínač slouží pro výběr až 4 různých
+        řídících algoritmů.
+      </p>
+
+      <p>
+        Pro ladění je možné k&nbsp;elektronice připojit pomocný terminál
+        s&nbsp;dvouřádkovým LCD displejem pro průběžné zobrazování nastavených
+        parametrů.
+      </p>
+
+      <h2> Energetická bilance </h2>
+
+      <p>
+        Zdrojem energie je sada 8ks slunečních článků 25x50mm zapojených
+        do série, které poskytnou při soutěžním osvětlení cca 60mW výkonu.
+        Maximální výkon lze z&nbsp;článků získat pokud se zatíží tak, aby
+        na nich bylo napětí 2.5 až 3V. Tato velikost napětí je výhodná
+        i tím, že se dá bez úprav použít pro napájení řídícího procesoru
+        (PIC16F88).
+      </p>
+
+      <p>
+        Na startu je možno 15s akumulovat energii. Za tyto dobu poskytnou články
+        cca 0.9J energie. Vlastní spotřeba procesoru (1mA) je jen malou částí
+        a nebudeme ji dále uvažovat. Akumulační kondenzátor 10G/16V se
+        touto energií nabije ideálně na cca 13.4V. Vzhledem k&nbsp;tomu,
+        že měnič má ztráty bude na kondenzátoru napětí o něco menší.
+        Teoreticky se do uvažovaného kondenzátoru vejde až 1.28J při 16V
+        a máme tedy i dostatečnou rezervu (více světla, lepší články a podobně).
+      </p>
+
+      <p>
+        <img width=137 height=41 src="Pictures/image011.gif"
+         alt="Vzorec E = 0.5 * C * U * U">
+      </p>
+      
+      <p>
+        <img width=129 height=47 src="Pictures/image012.gif"
+         alt="Vzorec U = sqrt( 2 * E / C )">
+      </p>
+
+      <h2> Měnič </h2>
+
+      <p>
+        Používáme blokující měnič, který má ideální vlastnosti pro uvažovanou
+        aplikaci. Umožňuje totiž transformovat energii ze vstupního napětí
+        jak směrem dolu (když je akumulační kondenzátor vybitý) tak i směrem
+        nahoru (když je akumulační kondenzátor nabitý). Velikost výstupního
+        napětí není principielně omezena a aby nedošlo k&nbsp;proražení
+        spínacího tranzistoru nebo akumulačního kondenzátoru je na výstupu
+        měniče zařazena ochranná Zenerova dioda 16V nebo 18V.
+      </p>
+
+      <p>
+        <img width=378 height=155 src="Pictures/image013.gif"
+         alt="Principáalní schéma měniče">
+      </p>
+
+      <p>
+        Při sepnutí tranzistoru Q se objeví napájecí napětí na primárním vinutí
+        transformátoru a začne postupně lineárně narůstat proud primárním vinutím
+        a dochází k&nbsp;ukládání energie v&nbsp;podobě magnetického pole cívky.
+      </p>
+
+      <p>
+        <img width=147 height=41 src="Pictures/image014.gif"
+         alt="Vzorec i(t) = U * t / L">
+      </p>
+      
+      <p>
+        <img width=133 height=41 src="Pictures/image015.gif"
+         alt="Vzorec E = 0.5 L * I * I">
+      </p>
+
+      <p>
+        Množství uložené energie je úměrné t<sup>2</sup> času sepnutí spínače
+        Q protože proud je úměrný času t.
+      </p>
+
+      <p>
+        Současně plynulý nárůst proudu způsobí, že se na sekundárním vinutí
+        objeví konstantní napětí shodné velikosti jako na primárním vinutí
+        (primární i sekundární vinutí mají shodný počet závitů). Kladný pól
+        tohoto napětí je u tečky protože kladný pól napětí na primárním vinutí
+        je také u tečky. Sekundární vinutí je zapojeno tak, že dioda D je
+        uzavřena a sekundárním vinutím neteče proud.
+      </p>
+
+      <p>
+        V&nbsp;okamžiku rozpojení spínače Q přestává téci proud primárním vinutím
+        a transformátor vrací naakumulovanou energii přes diodu D do akumulačního
+        kondenzátoru C. Napětí na sekundárním vinutí je dáno napětím
+        na kondenzátoru C (plus úbytek na diodě D) a napětí na primárním vinutí
+        je opět zhruba shodné. Tranzistor Q je namáhán napětím rovným součtu
+        napájecího napětí a napětí na akumulačním kondenzátoru.
+      </p>
+
+      <p>
+        Následující průběhy orientačně zobrazují průběh buzení tranzistoru,
+        napětí na primárním vinutí (na sekundárním je vždy stejné) a proudy
+        primárním a sekundárním vinutím.
+      </p>
+
+      <p>
+        <img width=373 height=181 src="Pictures/image016.gif"
+         alt="Časové průběhy napětí a proudu">
+      </p>
+
+      <p>
+        Množství energie v&nbsp;každém cyklu je dáno t<sup>2</sup> doby sepnutí
+        spínače. Tato doba je řízena procesorem tak, aby se udržovalo optimální
+        napětí na slunečních článcích. Při poklesu napětí pod nastavenou mez
+        se zkracuje doba sepnutí a naopak.
+      </p>
+
+      <p>
+        Aby měl měnič dobrou účinnost (cca 80%) je nezbytné zajistit, aby se
+        jádro transformátoru nepřebuzovalo. Toho se docílí tím, že má jádro
+        vzduchovou mezeru. V&nbsp;měniči je použito toroidní jádro Ø10mm
+        z&nbsp;hmoty H22 (nízkofrekvenční hmota). Jádro se oparně přelomí
+        na 2 poloviny a mezi ně se vloží papírová samolepka. Pak se vnitřní
+        a vnější průměr jádra oblepí papírovou samolepkou aby drželo pohromadě.
+        Protože je hmota H22 elektricky vodivá slouží papír současně i jako
+        ochrana proti zkratu vinutí na ostrých hranách jádra. Je možné použít
+        i jádra E z&nbsp;budícího transformátoru ze spínaného zdroje pro PC nebo
+        z&nbsp;vyřazeného monitoru. Výhoda toroidu je jen v&nbsp;jeho o něco
+        menší váze.
+      </p>
+
+      <p>
+        Vinutí se vine bifilárně (obě vinutí najednou) 2x70 závitů drátem
+        o Ø0.2mm. Při zapojování je třeba správně zapojit začátky a konce
+        vinutí (začátky jsou ve schématu označeny tečkou).
+      </p>
+
+      <p>
+        Indukčnost vinutí volíme tak, aby při buzení PWM na úrovni cca 30% tekl
+        do měniče jmenovitý proud. Pokud teče proud moc malý je indukčnost
+        příliš velká a naopak. Současně zkontrolujeme dosaženou účinnost.
+        Pokud je menší než asi 75% je něco špatně (nevhodné jádro, malá nebo
+        žádná vzduchová mezera, mizerná výstupní dioda, málo sepnutý tranzistor
+        a podobně).
+      </p>
+
+      <h3> Volba součástek </h3>
+
+      <p>
+        <b>Tranzistor Q</b> – použijeme výkonový FET s&nbsp;prahovým napětím
+        cca 2V pro proud cca 5A. Takové tranzistory se vyskytují na mainboardech
+        (zejména notebooků) nebo v&nbsp;LiIon bateriích do mobilních telefonů
+        (tam bývají v&nbsp;nevhodných pouzdrech nebo bývají nevhodně zapojené).
+        V&nbsp;současné době se již dají vhodné dvojité tranzistory
+        v&nbsp;pouzdru SO8 koupit. Používáme tranzistory minimálně na 20V.
+      </p>
+
+      <p>
+        <b>Dioda D</b> – použijeme Schottkyho diodu na cca 5A. Velmi pěkně
+        funguje SB540 ale je trochu větší než použitý SMD typ.
+      </p>
+
+      <h2> Rozjezd </h2>
+
+      <p>
+        Aby se co nejvíce pracně získané energie z&nbsp;akumulačního kondenzátoru
+        dostalo do motoru je třeba provádět plynulý rozjezd. Prosté připojení
+        motoru vede k&nbsp;nevalným výsledkům.
+      </p>
+
+      <p>
+        <img width=236 height=185 src="Pictures/image017.gif"
+         alt="Principální zapojení rozjezdu">
+      </p>
+
+      <p>
+        Rozjezd zajistíme postupným spínáním tranzistoru Q nejprve na kratičkou
+        dobu a postupně dobu sepnutí prodlužujeme až nakonec zůstane tranzistor
+        trvale sepnutý. K&nbsp;impulsnímu buzení používáme jednotku SSP
+        procesoru (synchronní komunikační jednotka), která umožňuje vysílat
+        sériově datová slova (8 bitů). Je tak snadné vysílat buď jen jednu
+        jedničku nebo až 7 jedniček.
+      </p>
+
+      <p>
+        <img width=323 height=199 src="Pictures/image018.gif"
+         alt="Průběhy při rozjezdu">
+      </p>
+
+      <p>
+        Dioda D je zde zásadně důležitou součástkou a bez ní to nejede.
+        Při sepnutí roste lineárně proud motorem (je to konec konců cívka) a
+        při rozpojení je potřeba, aby mohl proud téci i nadále. Jinak hrozí
+        proražení spínacího tranzistoru. Dioda umožňuje pokračovat proudu
+        motorem i po rozpojení tranzistoru. Proud tekoucí motorem je zdrojem
+        jeho „síly“, tedy točivého momentu.
+      </p>
+
+      <p>
+        Jako optimální se jeví „řazení“ po 50 až 80ms. Opakovací frekvence
+        rozjezdu je cca 7KHz.
+      </p>
+
+      <h1> Schéma </h1>
+
+      <p>
+        <img width=642 height=783 src="Pictures/image019.gif"
+         alt="Celkové schéma">
+      </p>
+
+      <p>
+        Zenerova dioda D1 chrání procesor před přepětím a přepólováním.
+        Zenerova dioda D4 chrání akumulační kondenzátor a spínací tranzistory
+        (oba) před příliš vysokým napětím.
+      </p>
+
+      <p>
+        Odpory R2 a R4 zajišťují vypnutý klidový stav tranzistorů Q1A a Q1B.
+        Odpory R1 a R3 spolu s&nbsp;diodami D5 a D6 zajišťují ochranu procesoru
+        proti záporným špičkám od spínacích tranzistorů (způsobených
+        nezanedbatelnou kapacitou mezi D a G elektrodami výkonových FET
+        tranzistorů).
+      </p>
+
+      <p>
+        Dioda D2 je výstupní diodou měniče a dioda D3 je ochrannou diodou obvodů
+        rozjezdu motoru. Pro zlepšení účinnosti je možné tyto diody buď vybrat
+        (minimální úbytek v&nbsp;propustném směru) nebo zdvojit.
+      </p>
+
+      <p>
+        Kondenzátor C4 je akumulačním kondenzátorem. Je volen s&nbsp;ohledem
+        na optimální poměr množství uložené energie k&nbsp;jeho váze. Je
+        zajímavé, že kondenzátor 10G/10V je stejně velký (tedy nevýhodný).
+        Velikosti kondenzátorů se pravidelně zmenšují, je tedy třeba pořídit
+        kondenzátor co nejnovější.
+      </p>
+
+      <p>
+        Procesor běží z&nbsp;vnitřního RC oscilátoru (na kmitočtu 4MHz).
+        Tlačítko SW1 umožňuje aktivovat jeho reset. Konektor J7 slouží
+        k&nbsp;programování procesoru. J5 je piezo element, který se používá pro
+        akustickou indikaci, že nastal reset.
+      </p>
+
+      <p>
+        P1 a P2 slouží pro nastavování parametrů algoritmů. Jejich natočení
+        se čte pomocí AD převodníku. Přepínač SW2 slouží pro volbu jednoho ze
+        čtyř algoritmů. Odpory R8 a R9 zajišťují, že se při programování
+        procesoru nezkratují programovací vodiče na zem.
+      </p>
+
+      <p>
+        Tranzistor Q2 slouží jako výstupní tranzistor sériové linky pomocí níž
+        procesor vysílá výstupní data (na jednoduchý terminál s&nbsp;dvouřádkovým
+        LCD displejem). Používá se při ladění. Zvolené řešení zajišťuje,
+        že připojený terminál (displej) nemá žádný vliv na spotřebu elektroniky.
+      </p>
+
+      <p>
+        Pro zajištění optimálního napětí na slunečních článcích je třeba měřit
+        velikost napájecího napětí. Toho se docílí srovnáním napájecího napětí
+        a napětím na referenční diodě U2 na které je standardně 1.25V. Napájení
+        referenční diody se zapíná jen po dobu měření (z portu RA4 přes R7).
+      </p>
+
+      <p>
+        Důležitou součástkou je C5. Bez tohoto kondenzátoru se může elektronika
+        dostat do naprosto nefunkčního stavu ze kterého se nedostane ani tlačítkem
+        reset. Mechanismus zaseknutí spočívá v&nbsp;tom, že pokud dojde
+        k&nbsp;poklesu napájení pod mez při které procesor přestává fungovat a je
+        současně PWM výstup ve stavu H zůstává klopný obvod PWM výstupu procesoru
+        ve stavu H (k&nbsp;udržení stavu mu stačí pár desetin voltů napájení)
+        a při případném nárůstu napájení se současně spíná tranzistor Q1A, který
+        tak vlastně vytváří zkrat na napájení. Napájecí napětí není schopno
+        překonat prahové napětí tranzistoru Q1A (cca 0.8V). Při takhle nízkém
+        napětí signál reset ještě nefunguje.
+      </p>
+
+      <h1> Osazení a oživení </h1>
+
+      <h2> Osazení </h2>
+
+      <p>
+        Plošný spoj je třeba vyrobit z&nbsp;co nejtenčího materiálu aby byl lehký.
+        Poněkud obtížnější je jen připájení miniaturního tranzistoru Q1.
+        Piezo element je přilepen ze strany součástí pomocí mezikruží
+        z&nbsp;oboustranně lepicí samolepky. Pod piezo elementem se vyvrtá otvor
+        Ø2mm aby lépe zněl. Pozor na polaritu vinutí transformátoru.
+      </p>
+
+      <p>
+        <img width=518 height=327 src="Pictures/image020.jpg"
+         alt="Osazovák, strana spojů">
+      </p>
+      
+      <p>
+        <img width=584 height=322 src="Pictures/image021.jpg"
+         alt="Osazovák, strana součástí">
+      </p>
+
+      <table class="Soupiska">
+        <tr>
+          <th> Reference </th>
+          <th> Hodnota </th>
+          <th> &nbsp; </th>
+          <th> Reference </th>
+          <th> Hodnota </th>
+        </tr>
+        <tr>
+          <th colspan="2"> Odpory  </th>
+          <th> &nbsp; </th>
+          <th colspan="2"> Tranzistory </th>
+        </tr>
+        <tr>
+          <td> R1,R3,R6 </td>
+          <td> 100      </td>
+          <td>          </td>
+          <td> Q1       </td>
+          <td> IRF7301  </td>
+        </tr>
+        <tr>
+          <td> R10       </td>
+          <td> 220       </td>
+          <td>           </td>
+          <td> Q2        </td>
+          <td> 2N7002SMD </td>
+        </tr>
+        <tr>
+          <td> R8,R9 </td>
+          <td> 1k    </td>
+          <td>       </td>
+          <th colspan="2"> Integrované obvody </th>
+        </tr>
+        <tr>
+          <td> R5,R7 </td>
+          <td> 10k   </td>
+          <td>       </td>
+          <td> U1    </td>
+          <td> PIC16F88/SO </td>
+        </tr>
+        <tr>
+          <td> R2,R4 </td>
+          <td> 100k  </td>
+          <td>       </td>
+          <td> U2    </td>
+          <td> LM385-1.2_SO8 </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Odporové trimry </th>
+          <td> </td>
+          <th colspan="2"> Mechanické součástky </th>
+        </tr>
+        <tr>
+          <td> P1,P2 </td>
+          <td> 100k  </td>
+          <td>       </td>
+          <td> J1    </td>
+          <td> BAT   </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Keramické kondenzátory </th>
+          <td>          </td>
+          <td> J2,J3,J6 </td>
+          <td> JUMP2    </td>
+        </tr>
+        <tr>
+          <td> C7,C8 </td>
+          <td> 10nF  </td>
+          <td>       </td>
+          <td> J4    </td>
+          <td> MOTOR </td>
+        </tr>
+        <tr>
+          <td> C5,C6 </td>
+          <td> 100nF </td>
+          <td>       </td>
+          <td> J5    </td>
+          <td> PIEZO </td>
+        </tr>
+        <tr>
+          <td> C2,C3   </td>
+          <td> 4uF/16V </td>
+          <td>         </td>
+          <td> J7      </td>
+          <td> PIC_ISP </td>
+        </tr>
+        <tr>
+          <th colspan=2> Elektrolytické kondenzátory </th>
+          <td>         </td>
+          <td> SW1     </td>
+          <td> P-B1720 </td>
+        </tr>
+        <tr>
+          <td> C1          </td>
+          <td> 1000uF/6.3V </td>
+          <td>             </td>
+          <td> SW2         </td>
+          <td> SMDSW2      </td>
+        </tr>
+        <tr>
+          <td> C4      </td>
+          <td> 10G/16V </td>
+          <td>         </td>
+          <td>         </td>
+          <td>         </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Indukčnosti </th>
+          <td> </td>
+          <td> </td>
+          <td> </td>
+        </tr>
+        <tr>
+          <td> TR1           </td>
+          <td> L-TR-1P1S_DOT </td>
+          <td> </td>
+          <td> </td>
+          <td> </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Diody </th>
+          <td> </td>
+          <td> </td>
+          <td> </td>
+        </tr>
+        <tr>
+          <td> D1           </td>
+          <td> BZV55C5.6SMD </td>
+          <td> </td>
+          <td> </td>
+          <td> </td>
+        </tr>
+        <tr>
+          <td> D2,D3    </td>
+          <td> SK54ASMD </td>
+          <td> </td>
+          <td> </td>
+          <td> </td>
+        </tr>
+        <tr>
+          <td> D4          </td>
+          <td> BZV55C18SMD </td>
+          <td> </td>
+          <td> </td>
+          <td> </td>
+        </tr>
+        <tr>
+          <td> D5,D6    </td>
+          <td> BAT48SMD </td>
+          <td> </td>
+          <td> </td>
+          <td> </td>
+        </tr>
+        <tr>
+          <td> D7             </td>
+          <td> LED0805CERVENA </td>
+          <td> </td>
+          <td> </td>
+          <td> </td>
+        </tr>
+      </table>
+
+      <h2> Oživení </h2>
+
+      <p>
+        Po naprogramování by měl procesor po každém resetu pípnout.
+        Při oživování se používají testovací algoritmy programového vybavení.
+        Na výstup RS232 je vhodné připojit pomocný terminál tvořený procesorem
+        PIC s&nbsp;dvouřádkovým LCD displejem. Dále jsou k&nbsp;oživování
+        nezbytné běžné multimetry (současné měření vstupního napětí a proudu
+        a výstupního napětí na definované zátěži) a&nbsp;laboratorní zdroj.
+        Velmi užitečným nástrojem je též osciloskop pro kontrolu průběhů.
+      </p>
+
+      <p>
+        Při napájení z&nbsp;laboratorního zdroje je třeba omezit napájecí proud.
+        Zejména algoritmy 0 a 3, které se snaží udržet definované napětí
+        na slunečních článcích mohou vést k&nbsp;přetížení měniče (spálení cívky
+        nebo tranzistoru).
+      </p>
+
+      <h1> LCD terminál </h1>
+
+      <p>
+        LCD terminál se připojuje na konektor J6 elektroniky a průběžně
+        zobrazuje to, co elektronika posílá po sérovém kanále. Terminál lze
+        snadno sestavit z&nbsp;procesorového modulu s&nbsp;procesorem PIC16F84
+        a z&nbsp;modulu s&nbsp;dvouřádkovým LCD displejem. Po překladu programu
+        terminálu lze samozřejmě použít i jiný procesor.
+      </p>
+
+      <p>
+        Komunikační rychlost je 9600Bd bez potvrzování přenosu, 8 datových bitů,
+        1 stop bit, polarita inverzní (nastavuje se ve zdrojovém kódu).
+      </p>
+
+      <p>
+        <img width=642 height=316 src="DART01B_soubory/image022.gif"
+         alt="">
+      </p>
+
+      <p>
+        Připojení LCD displeje shrnuje následující přehled:
+      </p>
+
+      <table>
+        <tr>
+          <td> RB4     </td>
+          <td> LCD_DB4 </td>
+        </tr>
+        <tr>
+          <td> RB5     </td>
+          <td> LCD_DB5 </td>
+        </tr>
+        <tr>
+          <td> RB6     </td>
+          <td> LCD_DB6 </td>
+        </tr>
+        <tr>
+          <td> RB7     </td>
+          <td> LCD_DB7 </td>
+        </tr>
+        <tr>
+          <td> RA0    </td>
+          <td> LCD_RS </td>
+        </tr>
+        <tr>
+          <td> RA1   </td>
+          <td> LCD_E </td>
+        </tr>
+        <tr>
+          <td> GND    </td>
+          <td> LCD_RW </td>
+        </tr>
+        <tr>
+          <td> RB1      </td>
+          <td> RS232_IN </td>
+        </tr>
+      </table>
+
+      <h1> Programové vybavení </h1>
+
+      <p>
+        Verze 1.01.
+      </p>
+
+      <h2> Uživatelský návod </h2>
+
+      <p>
+        Programové vybavení má implementovány 4 algoritmy, které se volí stavem
+        dvojitého přepínače&nbsp;SW2.
+      </p>
+
+      <h3> Algoritmus 0 – standardní jízda</h3>
+
+      <p>
+        Po resetu 14.5s akumuluje energii do kondenzátoru a poté provede rozjezd.
+        Hlavní měnič a algoritmus optimalizace zátěže slunečních článků běží
+        po celou dobu běhu programu. Pomocí P1 se nastavuje požadovaná velikost
+        napětí na slunečních článcích a pomocí P2 se nastavuje rychlost rozjezdu.
+      </p>
+
+      <h3> Algoritmus 1 – test PWM měniče a měniče pro rozjezd </h3>
+
+      <p>
+        Pomocí P1 se nastavuje šířka PWM impulsů hlavního měniče. Je vhodné
+        napájení z&nbsp;regulovatelného zdroje (s proudovým omezením na cca
+        0.5A). Účinnost se určuje ze vstupního napětí a proudu a z&nbsp;napětí
+        na zatěžovacím odporu 100Ω na výstupu (konektor J3). P2 musí být
+        nastaven na 0 nebo musí být odpojen motor.
+      </p>
+
+      <p>
+        Šířka impulsů spínače motoru se nastavuje pomocí P2. P1 se nastavuje
+        na 0 a na J3 se přivádí pomocné napájecí napětí (5 až 16V). Při šířce
+        impulsů 1 (nastaveno pomocí P2) by mělo vozítko pomalu jet při napětí
+        pomocného zdroje 16V.
+      </p>
+
+      <h3> Algoritmus 2 – test rozjezdu </h3>
+
+      <p>
+        Tento algoritmus po resetu počká 2s a pak provede standardní rozjezd
+        motoru. Po 2s motor opět odpojí. Pomocí P2 se nastavuje prodleva mezi
+        stupni řazení. Optimální hodnota bývá mezi 50 a 80ms (není kritické).
+        Test rozjezdu se provádí tak, že se přes J3 nabije akumulační kondenzátor
+        na požadované napětí, poté se pomocný zdroj odpojí a provede se start
+        (pomocí tlačítka reset). Měří se buď délka dráhy nebo čas projetí fixní
+        dráhy. Hlavní střídač při tomto testu neběží. Algoritmus 0 používá
+        stejné nastavení P2.
+      </p>
+
+      <h3> Algoritmus 3 – test optimalizace nabíjení </h3>
+
+      <p>
+        Tento algoritmus slouží k&nbsp;ověření algoritmu optimalizace výkonu
+        ze slunečních článků. Pomocí P1 se nastavuje požadovaná hodnota napětí
+        na solárních článcích tak, aby na zátěži 100Ω na výstupu (konektor J3)
+        bylo maximální napětí. Algoritmus 0 používá stejné nastavení P1.
+      </p>
+
+      <h2> Architektura programu </h2>
+
+      <p>
+        Procesor běží z&nbsp;vnitřního generátoru hodin 4MHz. Má povolen
+        <span lang="en">watch dog</span> a výstup PWM má nastaven na port RB3.
+      </p>
+
+      <p>
+        Pro vysílání dat do pomocného terminálu používá HW podporu
+        (jednotka USART). Nepoužívá se zde přerušení, je-li třeba vyslat více
+        znaků za sebou procedura pro vysílání znaků <samp>Putc()</samp> čeká
+        dokud není vyslán předchozí znak. Počáteční inicializaci sériového
+        kanálu zajišťuje procedura <samp>InitRS232()</samp>. Rychlost
+        je nastavena na 9600Bd.
+      </p>
+
+      <p>
+        Pro pozvolný rozjezd motoru se používá jednotka sériové synchronní
+        komunikace SSP, která umožňuje HW prostředky vyslat sérově zadaná data.
+        Pro postupný rozjezd se nejprve vysílají data obsahující 1 jedničku
+        a postupně se ve vysílaném (osmibitovém) slově zvětšuje počet jedniček
+        až na 7. Poté se jednotka SSP deaktivuje a na příslušnou výstupní nožičku
+        je nastaven stav trvalé jednotky.
+      </p>
+
+      <p>
+        Jednotka SSP po vyslání 1 bajtu dat vyvolá přerušení jehož obsluha zapíše
+        další bajt do SSP pro vyslání. Jaký bajt se opakovaně vysílá je určeno
+        „převodovým stupněm“ při rozjezdu. Obsluhu přerušení zajišťuje procedura
+        <samp>IntSSP()</samp>, data pro opakované vysílání jsou uložena
+        v&nbsp;globální proměnné <samp>MotorPattern</samp>. Hodnota do této
+        proměnné se nastavuje pomocí procedury <samp>MotorPatternSet()</samp>,
+        která ze zadaného „rychlostního stupně“ vyrobí slovo s&nbsp;příslušným
+        počtem jedniček. Klidový stav („neutrál“) a plný výkon se neobsluhují
+        pomocí SSP protože jsou zajištěny trvalým stavem 0 nebo 1 na portu
+        pro ovládání motoru.
+      </p>
+
+      <p>
+        Procedura MotorSet() zajišťuje nastavení zadaného rychlostního stupně
+        a povolí přerušení od jednotky SSP. Tato procedura se volá z&nbsp;hlavního
+        programu pro rozjezd.
+      </p>
+
+      <p class=MsoNormal>Pro měření času pro akumulaci a pro „řazení“ při rozjezdu
+        se používá časovač T0, který je nastaven na přerušení každou cca 1ms
+        (asi 1000x za sekundu). Obsluhu přerušení od časovače zajišťuje procedura
+        <samp>IntT0()</samp>.
+      </p>
+
+      <p>
+        Pro odměřování uplynutí časového intervalu se používá procedura
+        <samp>TimerSet()</samp> a pro testování zda již nastavený čas uplynul
+        se používá funkce <samp>TimerIf()</samp>.
+        </p>
+
+      <p>
+        Automatický rozjezd motoru se zahajuje voláním procedury
+        <samp>MotorStart()</samp>, která nastaví příslušné proměnné, které slouží
+        pro řízení rozjezdu. Vlastní řízení rozjezdu se provádí v&nbsp;proceduře
+        <samp>IntT0()</samp>, tedy v&nbsp;obsluze přerušení od časovače T0.
+        Podstatným parametrem rozjezdu je časový interval mezi řazením rychlostních
+        stupňů. Tento parametr se ukládá do globální proměnné <samp>MotorDelay</samp>.
+        Proměnná <samp>MotorGear</samp> a <samp>MotorTime</samp> obsahují aktuální
+        rychlostní stupeň (1 je nejméně) a čas(v ms), který ještě zbývá než se bude
+        řadit další rychlost.
+      </p>
+
+      <p>
+        Funkce <samp>ReadAD()</samp> zajišťuje změření napětí na zadaném vstupu
+        AD převodníku. Výstupem je hodnota 8 bitů (0 až 255). Kanál 0 a 1 měří
+        natočení běžce trimru P1 a P2, kanál 4 měří napětí na referenční diodě
+        U2 (v tomto případě se před měřením připojuje napájení na referenční diodu
+        a po ukončení měření se odpojuje).
+      </p>
+
+      <h3> Hlavní program </h3>
+
+      <p>
+        Hlavní program sestává z&nbsp;inicializační části, která se provádí
+        jen jednou, poté otestuje stav přepínačů režimu činnosti a podle jejich
+        nastavení spustí jeden ze 4 výkonných algoritmů.
+      </p>
+
+      <p>
+        Inicializace sestává z&nbsp;těchto činností:
+      </p>
+
+      <ul>
+        <li>Nastavení rychlosti interního generátoru na 4MHz</li>
+        <li>Nastavení se klidové hodnoty na výstupních portech</li>
+        <li>Nastavení <span lang="en">watch dog</span> na 130ms</li>
+        <li>Povolení analogových vstupů na AN0 až AN4, ostatní jsou digitální</li>
+        <li>Inicializace RS232</li>
+        <li>Pípnutí na piezo element</li>
+        <li>Přečtení stavu přepínače pro volbu režimu činnosti a výpis na LCD</li>
+        <li>Inicializace PWM výstupu (perioda 32us, rozlišení 1us, výstup na 5 bitů)</li>
+        <li>Inicializace časovače T0 (přerušení po cca 1ms)</li>
+        <li>Načtení parametru P2 (časová prodleva mezi stupni řazení při rozjezdu)</li>
+      </ul>
+
+      <p>
+        Algoritmus optimalizace zátěže slunečních článků pracuje tak, že se přečte
+        z&nbsp;P1 (AD převodníkem na kanálu 1) požadovaná hodnota, která
+        se následně porovnává se skutečnou hodnotou změřeného napětí referenční
+        diody (napětí na referenční diodě je vždy 1,25V ale změřená hodnota odráží
+        skutečnost, že číslu 255 odpovídá plné napájecí napětí procesoru, tedy
+        napětí na slunečních článcích). Pokud je číslo menší, znamená to, že
+        napájecí napětí je větší než požadované a je možno zvýšit výkon měniče.
+        Zvýší se tedy délka PWM impulsu. V&nbsp;opačném případě se délka impulsu
+        snižuje (až na nulu). Maximální hodnota délky PWM impulsu je omezena
+        na 24us protože při připojení tvrdého napájecího zdroje (například
+        při programování procesoru) by se regulace snažila snížit napájecí
+        napětí na optimálních 2.5 až 3V což nejde (nakonec by tranzistor měniče
+        trvale sepnul).
+      </p>
+
+      <h2> Terminál </h2>
+
+      <p>
+        Program úvodem vypíše verzi na LCD displeji a poté začne přijímat data
+        ze sériového kanálu. Příjem je zahájen start bitem na INT0 vstupu.
+        Start bit vyvolá přerušení, během kterého je programově přečten 1 znak
+        a vložen do fronty přijatých znaků (až 40znaků).
+      </p>
+
+      <p>
+        Hlavní smyčka pouze opakovaně testuje, zda je nějaký znak ve frontě znaků
+        a v&nbsp;případě že tam je tak jej zpracuje (zobrazí).
+        Program podporuje následující řídící znaky:
+      </p>
+
+      <ul>
+        <li><samp>0x0C</samp> = <samp>\f</samp> – smazání displeje</li>
+        <li><samp>0x0A</samp> = <samp>\n</samp> – přechod na druhou řádku displeje</li>
+        <li><samp>0x0D</samp> = <samp>\r</samp> – přechod do pozice 1,1</li>
+        <li><samp>0x08</samp> = <samp>\b</samp> – <span lang="en">back space</span></li>
+      </ul>
+
+    </div>
+
+    <!-- AUTOINCLUDE START "Page/Footer.cs.ihtml" DO NOT REMOVE -->
+    <!-- ============== PATIČKA ============== -->
+    <div class="Footer">
+      <script type="text/javascript">
+      <!--
+        SetRelativePath("../../../../");
+        DrawFooter();
+      // -->
+      </script>
+      <noscript>
+        <p><b> Pro zobrazení (vložení) hlavičky je potřeba JavaScript </b></p>
+      </noscript>
+    </div>
+    <!-- AUTOINCLUDE END -->
+
+  </body>
+</html>

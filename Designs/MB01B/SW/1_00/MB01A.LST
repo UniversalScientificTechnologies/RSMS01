@@ -1,0 +1,2735 @@
+CCS PCW C Compiler, Version 3.110, 15448
+
+               Filename: c:\krouzek\test\mb01a.LST
+
+               ROM used: 1523 (74%)
+                         Largest free fragment is 512
+               RAM used: 29 (17%) at main() level
+                         88 (50%) worst case
+               Stack:    6 worst case (5 in main + 1 for interrupts)
+
+*
+0000:  MOVLW  00
+0001:  MOVWF  0A
+0002:  GOTO   590
+0003:  NOP
+0004:  MOVWF  7F
+0005:  SWAPF  03,W
+0006:  CLRF   03
+0007:  MOVWF  21
+0008:  MOVF   7F,W
+0009:  MOVWF  20
+000A:  MOVF   0A,W
+000B:  MOVWF  28
+000C:  CLRF   0A
+000D:  SWAPF  20,F
+000E:  MOVF   04,W
+000F:  MOVWF  22
+0010:  MOVF   77,W
+0011:  MOVWF  23
+0012:  MOVF   78,W
+0013:  MOVWF  24
+0014:  MOVF   79,W
+0015:  MOVWF  25
+0016:  MOVF   7A,W
+0017:  MOVWF  26
+0018:  MOVF   7B,W
+0019:  MOVWF  27
+001A:  BCF    03.7
+001B:  BCF    03.5
+001C:  MOVLW  8C
+001D:  MOVWF  04
+001E:  BTFSS  00.2
+001F:  GOTO   022
+0020:  BTFSC  0C.2
+0021:  GOTO   0CB
+0022:  MOVF   22,W
+0023:  MOVWF  04
+0024:  MOVF   23,W
+0025:  MOVWF  77
+0026:  MOVF   24,W
+0027:  MOVWF  78
+0028:  MOVF   25,W
+0029:  MOVWF  79
+002A:  MOVF   26,W
+002B:  MOVWF  7A
+002C:  MOVF   27,W
+002D:  MOVWF  7B
+002E:  MOVF   28,W
+002F:  MOVWF  0A
+0030:  SWAPF  21,W
+0031:  MOVWF  03
+0032:  SWAPF  7F,F
+0033:  SWAPF  7F,W
+0034:  RETFIE
+....................  // Melodicky zvonek MB01A_1_00  
+.................... //  
+.................... // Prohram pro melodicky zvonek s pouzitim knihovny Sound_t1.C  
+.................... //  
+.................... // (c)miho 2004  
+.................... //  
+.................... // Historie:  
+.................... // 1.00  Uvodni verze  
+....................   
+.................... #include <16F819.h>                                   // Definice procesoru 
+....................  //////// Standard Header file for the PIC16F628 device ////////////////  
+.................... #device PIC16F819  
+.................... #list  
+....................  
+.................... #fuses HS,NOPROTECT,NOWDT,PUT,NOLVP,NOBROWNOUT,WRT    // Definice konfiguracniho slova  
+....................   
+.................... #define  POWER_386   PIN_A4               // L zapne napajeni pro zesilovac LM386  
+.................... #define  POWER_PIC   PIN_A3               // L pripoji GND pro procesor PIC  
+....................   
+.................... #define  SOUND_HI    PIN_B3               // Akusticky vystup  
+.................... #define  SOUND_LO    PIN_B2               // Akusticky vystup  
+.................... #define  SOUND_CLOCK 20000000             // Frekvence hodin  
+.................... #define  SOUND_LowOctave 1                // O oktavu vys protoze mame moc rychly krystal  
+.................... #include "Sound_T1.c"                     // Hudebni knihovna 
+....................  // Knihovna pro generovani hudebnich zvuku dane frekvence a delky nebo  
+.................... // dane noty temperovaneho ladeni a delky.  
+.................... //  
+.................... // Pro gnerovani pouziva casovac T0, T1 a jednotku CCP1.  
+.................... //  
+.................... // POZOR -- POZOR -- POZOR  
+.................... // Pri nizsi frekvenci XTALu (nez asi 5MHz) je rezie preruseni tak velka, ze spotrebuje  
+.................... // veskery strojovy cas a uz nedojde k ukonceni rozehraneho tonu vyssi frekvence (z oktavy 7  
+.................... // nebo nad cca 8KHz). Resenim je pouzit vlastni INT proceduru s minimalni rezii.  
+.................... //  
+.................... // (c)miho 2004  
+.................... //  
+.................... // Historie  
+.................... // 1.00 Uvodni verze  
+....................   
+....................   
+.................... // Konfiguracni parametry  
+.................... //#define SOUND_HI     PIN_xx          // Pozitivni vystup  
+.................... //#define SOUND_LO     PIN_xx          // Komplementarni vystup  
+.................... #ifndef SOUND_CLOCK  
+.................... #define SOUND_CLOCK  4000000           // Frelvence krystalu v Hz  
+.................... #endif  
+....................   
+....................   
+.................... // Definice hudebnich tonu (not) pro proceduru SoundNote()  
+.................... #define SOUND_C     0  
+.................... #define SOUND_Cis   1  
+.................... #define SOUND_D     2  
+.................... #define SOUND_Dis   3  
+.................... #define SOUND_E     4  
+.................... #define SOUND_F     5  
+.................... #define SOUND_Fis   6  
+.................... #define SOUND_G     7  
+.................... #define SOUND_Gis   8  
+.................... #define SOUND_A     9  
+.................... #define SOUND_Ais   10  
+.................... #define SOUND_H     11  
+.................... #define SOUND_Space 12                 // Pomlka  
+....................   
+....................   
+.................... // Prototypy verejnych procedur  
+....................   
+.................... void SoundBeep(unsigned int16 Frequency, unsigned int16 Duration);  
+.................... // Predava se frekvence v Hz a doba trvani v ms (0 znamena ticho)  
+....................   
+.................... void SoundNote(unsigned int8 Note, Octave, unsigned int16 Duration);  
+.................... // Predava se cislo noty (0 je C), posunuti v oktavach (0 nejnizsi ton,  
+.................... // SOUND_Space je ticho), doba trvani v ms  
+....................   
+.................... // Alternativni makra pro generovani konstatnich tonu  
+.................... // SoundBeepMacro(Frequency, Duration) - frekvence nesmi byt 0  
+.................... // SoundNoteMacro(Note, Octave, Duration) - nepodporuje SOUND_Space  
+.................... // SoundSpaceMacro(Duration) - hraje ticho  
+....................   
+.................... // Privatni cast  
+....................   
+....................   
+.................... #int_ccp1  
+.................... void IntCCP1()  
+.................... // Preruseni od jednotky CCP1 generuje vystup  
+.................... {  
+....................    volatile int1 Data;                    // Posledni stav vystupu  
+....................    output_bit(SOUND_HI,Data);             // Nastav vystup  
+*
+00CB:  BTFSC  72.0
+00CC:  GOTO   0CF
+00CD:  BCF    06.3
+00CE:  GOTO   0D0
+00CF:  BSF    06.3
+00D0:  BSF    03.5
+00D1:  BCF    06.3
+....................    output_bit(SOUND_LO,~Data);  
+00D2:  BTFSS  72.0
+00D3:  GOTO   0D8
+00D4:  BCF    03.5
+00D5:  BCF    06.2
+00D6:  GOTO   0DA
+00D7:  BSF    03.5
+00D8:  BCF    03.5
+00D9:  BSF    06.2
+00DA:  BSF    03.5
+00DB:  BCF    06.2
+....................    Data=~Data;                            // Otoc stav vystupu  
+00DC:  MOVLW  01
+00DD:  XORWF  72,F
+.................... }  
+....................   
+....................   
+.................... #if      SOUND_CLOCK < (65535*32*4*2)     // < 16.7 MHz  
+.................... #define  SOUND_PRESCALE 1  
+.................... #elif    SOUND_CLOCK < (65535*32*4*2*2)   // < 33.6 MHz  
+.................... #define  SOUND_PRESCALE 2  
+.................... #elif    SOUND_CLOCK < (65535*32*4*2*4)   // < 67.1 MHz  
+.................... #define  SOUND_PRESCALE 4  
+.................... #elif    SOUND_CLOCK < (65535*32*4*2*8)   // < 134 MHz  
+.................... #define  SOUND_PRESCALE 8  
+.................... #else  
+.................... #error SOUND_CLOCK Frequency too high  
+.................... #endif  
+00DE:  BCF    03.5
+00DF:  BCF    0C.2
+00E0:  BCF    0A.3
+00E1:  GOTO   022
+.................... #bit T0IF=0x0B.2  
+.................... void SoundBeep(unsigned int16 Frequency, unsigned int16 Duration)  
+.................... // Predava se frekvence v Hz a doba trvani v ms (0 znamena ticho)  
+.................... // Rozumne frekvence jsou od 32Hz  
+.................... {  
+....................    unsigned int16 Time;                   // Pocitadlo zlomkoveho casu  
+....................   
+....................    // Inicializace casovace  
+....................    if (Frequency!=0)                      // Frekvence 0 znamena ticho  
+....................    {  
+....................       setup_ccp1(CCP_COMPARE_RESET_TIMER);  
+....................       set_timer1(0);  
+....................       (int16)CCP_1=SOUND_CLOCK/SOUND_PRESCALE/4/2/Frequency;  
+....................       #if   SOUND_PRESCALE==1  
+....................       setup_timer_1(T1_INTERNAL|T1_DIV_BY_1);  
+....................       #elif SOUND_PRESCALE==2  
+....................       setup_timer_1(T1_INTERNAL|T1_DIV_BY_2);  
+....................       #elif SOUND_PRESCALE==4  
+....................       setup_timer_1(T1_INTERNAL|T1_DIV_BY_4);  
+....................       #elif SOUND_PRESCALE==8  
+....................       setup_timer_1(T1_INTERNAL|T1_DIV_BY_8);  
+....................       #endif  
+....................       enable_interrupts(int_ccp1);  
+....................       enable_interrupts(global);  
+....................    }  
+....................   
+....................    // Delka tonu merena casovacem T0 (bez preruseni)  
+....................    Time=0;  
+....................    setup_timer_0(RTCC_INTERNAL|RTCC_DIV_1);  
+....................    while (Duration)  
+....................    {  
+....................       if (T0IF)                           // Preteceni T0 - kazdych (1/CLK)*4*256  
+....................       {  
+....................          T0IF = 0;  
+....................          Time += (256*4*1000*2048+SOUND_CLOCK/2)/SOUND_CLOCK;  
+....................       }  
+....................       if (Time>>11)  
+....................       {  
+....................          Time -= 2048;  
+....................          Duration--;  
+....................       }  
+....................    }  
+....................   
+....................    // Konec casovace  
+....................    disable_interrupts(int_ccp1);  
+....................    disable_interrupts(global);  
+.................... }  
+....................   
+....................   
+.................... // Definice casu pulperody pro nejnizsi oktavu, v kvantech casovace T1  
+.................... // Pulperiody tonu v dalsich oktavach se ziskavaji rotaci vpravo  
+.................... #define SOUND_Peri_C   ((30578*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 30578us  
+.................... #define SOUND_Peri_Cis ((28862*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 28862us  
+.................... #define SOUND_Peri_D   ((27242*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 27242us  
+.................... #define SOUND_Peri_Dis ((25713*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 25713us  
+.................... #define SOUND_Peri_E   ((24270*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 24270us  
+.................... #define SOUND_Peri_F   ((22908*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 22908us  
+.................... #define SOUND_Peri_Fis ((21622*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 21622us  
+.................... #define SOUND_Peri_G   ((20408*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 20408us  
+.................... #define SOUND_Peri_Gis ((19263*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 19263us  
+.................... #define SOUND_Peri_A   ((18182*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 18182us  
+.................... #define SOUND_Peri_Ais ((17161*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 17161us  
+.................... #define SOUND_Peri_H   ((16198*(SOUND_CLOCK/1000)/1000/4/2)/SOUND_PRESCALE) // Perioda 16198us  
+....................   
+.................... // Kontrola na delku konstanty (musi byt mensi nez delka citace)  
+.................... #if SOUND_Peri_C > 65535  
+.................... #error "SOUND_Peri_C too long (Note C requires delay > 65535 cycles)"  
+.................... #endif  
+....................   
+.................... // Casove konstanty pro noty nejnizsi oktavy  
+.................... const unsigned int16 Table[12] =  
+....................                         SOUND_Peri_C,     SOUND_Peri_Cis,   SOUND_Peri_D,     SOUND_Peri_Dis,  
+....................                         SOUND_Peri_E,     SOUND_Peri_F,     SOUND_Peri_Fis,   SOUND_Peri_G,  
+....................                         SOUND_Peri_Gis,   SOUND_Peri_A,     SOUND_Peri_Ais,   SOUND_Peri_H;  
+*
+0035:  BCF    0A.0
+0036:  BCF    0A.1
+0037:  BCF    0A.2
+0038:  ADDWF  02,F
+0039:  RETLW  4E
+003A:  RETLW  95
+003B:  RETLW  ED
+003C:  RETLW  8C
+003D:  RETLW  04
+003E:  RETLW  85
+003F:  RETLW  8D
+0040:  RETLW  7D
+0041:  RETLW  81
+0042:  RETLW  76
+0043:  RETLW  DB
+0044:  RETLW  6F
+0045:  RETLW  93
+0046:  RETLW  69
+0047:  RETLW  A6
+0048:  RETLW  63
+0049:  RETLW  0E
+004A:  RETLW  5E
+004B:  RETLW  C7
+004C:  RETLW  58
+004D:  RETLW  CB
+004E:  RETLW  53
+004F:  RETLW  17
+0050:  RETLW  4F
+....................   
+....................   
+.................... void SoundNote(unsigned int8 Note, Octave, unsigned int16 Duration)  
+.................... // Predava se cislo noty (0 je C), posunuti v oktavach (0 nejnizsi ton)  
+.................... // doba trvani v ms (0 znamena ticho)  
+.................... // Zahraje zadanou notu v zadane oktave dane delky  
+.................... {  
+....................    unsigned int16 Time;                   // Pocitadlo zlomkoveho casu  
+....................   
+....................    // Inicializace casovace  
+....................    if (Note!=SOUND_Space)                 // Pokud se ma hrat spust hrani  
+*
+00E2:  MOVF   69,W
+00E3:  SUBLW  0C
+00E4:  BTFSC  03.2
+00E5:  GOTO   109
+....................    {  
+....................       setup_ccp1(CCP_COMPARE_RESET_TIMER);  
+00E6:  MOVLW  0B
+00E7:  MOVWF  17
+....................       set_timer1(0);  
+00E8:  CLRF   0F
+00E9:  CLRF   0E
+....................       (int16)CCP_1=Table[Note]>>Octave;  
+00EA:  BCF    03.0
+00EB:  RLF    69,W
+00EC:  MOVWF  77
+00ED:  MOVWF  6F
+00EE:  INCF   6F,W
+00EF:  CALL   035
+00F0:  MOVWF  7A
+00F1:  MOVF   6F,W
+00F2:  CALL   035
+00F3:  MOVWF  70
+00F4:  MOVF   7A,W
+00F5:  MOVWF  71
+00F6:  MOVWF  16
+00F7:  MOVF   70,W
+00F8:  MOVWF  15
+00F9:  MOVF   6A,W
+00FA:  MOVWF  77
+00FB:  BTFSC  03.2
+00FC:  GOTO   102
+00FD:  BCF    03.0
+00FE:  RRF    16,F
+00FF:  RRF    15,F
+0100:  DECFSZ 77,F
+0101:  GOTO   0FD
+....................       #if   SOUND_PRESCALE==1  
+....................       setup_timer_1(T1_INTERNAL|T1_DIV_BY_1);  
+....................       #elif SOUND_PRESCALE==2  
+....................       setup_timer_1(T1_INTERNAL|T1_DIV_BY_2);  
+0102:  MOVLW  95
+0103:  MOVWF  10
+....................       #elif SOUND_PRESCALE==4  
+....................       setup_timer_1(T1_INTERNAL|T1_DIV_BY_4);  
+....................       #elif SOUND_PRESCALE==8  
+....................       setup_timer_1(T1_INTERNAL|T1_DIV_BY_8);  
+....................       #endif  
+....................       enable_interrupts(int_ccp1);  
+0104:  BSF    03.5
+0105:  BSF    0C.2
+....................       enable_interrupts(global);  
+0106:  MOVLW  C0
+0107:  BCF    03.5
+0108:  IORWF  0B,F
+....................    }  
+....................   
+....................    // Delka tonu merena casovacem T0 (bez preruseni)  
+....................    Time=0;  
+0109:  CLRF   6E
+010A:  CLRF   6D
+....................    setup_timer_0(RTCC_INTERNAL|RTCC_DIV_1);  
+010B:  BSF    03.5
+010C:  MOVF   01,W
+010D:  ANDLW  C0
+010E:  IORLW  08
+010F:  MOVWF  01
+....................    while (Duration)  
+0110:  BCF    03.5
+0111:  MOVF   6B,W
+0112:  IORWF  6C,W
+0113:  BTFSC  03.2
+0114:  GOTO   132
+....................    {  
+....................       if (T0IF)                           // Preteceni T0 - kazdych (1/CLK)*4*256  
+0115:  BTFSS  0B.2
+0116:  GOTO   11C
+....................       {  
+....................          T0IF = 0;  
+0117:  BCF    0B.2
+....................          Time += (256*4*1000*2048+SOUND_CLOCK/2)/SOUND_CLOCK;  
+0118:  MOVLW  69
+0119:  ADDWF  6D,F
+011A:  BTFSC  03.0
+011B:  INCF   6E,F
+....................       }  
+....................       if (Time>>11)  
+011C:  CLRF   7A
+011D:  RRF    6E,W
+011E:  MOVWF  79
+011F:  RRF    79,F
+0120:  RRF    79,F
+0121:  MOVLW  1F
+0122:  ANDWF  79,F
+0123:  MOVF   79,W
+0124:  IORWF  7A,W
+0125:  BTFSC  03.2
+0126:  GOTO   131
+....................       {  
+....................          Time -= 2048;  
+0127:  MOVLW  00
+0128:  SUBWF  6D,F
+0129:  MOVLW  08
+012A:  BTFSS  03.0
+012B:  MOVLW  09
+012C:  SUBWF  6E,F
+....................          Duration--;  
+012D:  MOVF   6B,W
+012E:  BTFSC  03.2
+012F:  DECF   6C,F
+0130:  DECF   6B,F
+....................       }  
+....................    }  
+0131:  GOTO   111
+....................   
+....................    // Konec casovace  
+....................    disable_interrupts(int_ccp1);  
+0132:  BSF    03.5
+0133:  BCF    0C.2
+....................    disable_interrupts(global);  
+0134:  BCF    03.5
+0135:  BCF    0B.6
+0136:  BCF    0B.7
+0137:  BTFSC  0B.7
+0138:  GOTO   136
+0139:  RETLW  00
+.................... }  
+....................  
+....................   
+.................... #include "Data.c"                         // Datovy blok pro predpripravene skladby 
+....................  // Tento soubor definuje vse potrebne pro ulozeni skladeb do pameti programu.  
+.................... // Dale definuje pislusna makra pro snadne definice. Tyto definice jsou voleny  
+.................... // zamerne tak, aby mohl byt pouzit stejny soubor s definici skladby jak  
+.................... // pro vlozeni primo do firmwaru v dobe prekladu tak i k dodatecnemu nahrani  
+.................... // skladby pres seriovou linku.  
+....................   
+.................... // Definice hranic pameti pro ulozeni pisnicek  
+.................... #define  STARTMEM       0x600    // Zde zacina pametoa oblast pro pisnicky  
+.................... #define  ENDMEM         0x7ff    // Zde konci pametova oblast pro pisnicky  
+....................   
+.................... // Definice konstant pro kodovani dat  
+.................... #define  ENDOFDATA      0x3FFF   // Priznak konce pisnicek (prazdna pamet)  
+.................... #define  DATABEGIN      0x2000   // Kod zacatku skladby  
+.................... #define  MASKBEGIN      0x3800  
+.................... #define  DATATEMPO      0x2800   // Kod pro nastaveni tempa  
+.................... #define  MASKTEMPO      0x3800  
+.................... #define  DATAPAUSE      0x3000   // Kod pro nastaveni mezery mezi notami  
+.................... #define  MASKPAUSE      0x3800  
+.................... #define  MASKNOTE       0x2000   // Nejvissi bit 0 urcuje, ze jde o notu  
+....................   
+.................... // Pseudomakra pro jednoduchy zapis skladeb do zdrojaku jazyka C  
+.................... #define  BEGIN          DATABEGIN+  // Zacatek pisnicky + posunuti oktav  
+.................... #define  TEMPO          DATATEMPO+  // Delka nejskratsi noty v ms  
+.................... #define  PAUSE          DATAPAUSE+  // Delka mezery mezi notami  
+.................... #define  END                        // Konec skladby, zde nic neznamena  
+....................   
+.................... // Pseudomakra pro zapis not, zapisuje se cislo oktavy, nota, delka noty  
+.................... #define  C              *16 + SOUND_C       + 128 *  
+.................... #define  Cis            *16 + SOUND_Cis     + 128 *  
+.................... #define  D              *16 + SOUND_D       + 128 *  
+.................... #define  Dis            *16 + SOUND_Dis     + 128 *  
+.................... #define  E              *16 + SOUND_E       + 128 *  
+.................... #define  F              *16 + SOUND_F       + 128 *  
+.................... #define  Fis            *16 + SOUND_Fis     + 128 *  
+.................... #define  G              *16 + SOUND_G       + 128 *  
+.................... #define  Gis            *16 + SOUND_Gis     + 128 *  
+.................... #define  A              *16 + SOUND_A       + 128 *  
+.................... #define  Ais            *16 + SOUND_Ais     + 128 *  
+.................... #define  H              *16 + SOUND_H       + 128 *  
+.................... #define  Space                SOUND_Space   + 128 *  
+....................   
+.................... // Pametova oblast  
+.................... #ORG 0x600,0x7FF {}     // Vyhrazeni oblasti pameti pro ulozeni pisnicek  
+.................... #ROM 0x600 = {          // Naplneni oblasti pameti daty  
+....................   
+.................... // Pisnicky jako soucast firwaru se vkladaji sem  
+.................... // Museji mit stejny format jako uvedene priklady aby zafungovaly makra  
+.................... #include "Skladby\TheFinalSoundDown.txt" 
+....................  // Pisnicka "The Final Sound Down"  
+.................... //  
+.................... // Tato pisnicka je napsana ve formatu, ktery se da pouzit jak pro primy  
+.................... // preklad do firmwaru melodickeho zvonku tak i pro dodatecne nahrani  
+....................   
+.................... BEGIN    3,             // Zacatek skladby  
+.................... TEMPO    100,           // Delka nejkratsi noty v ms  
+.................... PAUSE    100,           // Delka mezery mezi notami  
+....................   
+.................... 1  A     1,  
+.................... 1  G     1,  
+.................... 1  A     4,  
+.................... 1  D     4,  
+....................    Space 2,  
+....................   
+.................... 1  Ais   1,  
+.................... 1  A     1,  
+.................... 1  Ais   2,  
+.................... 1  A     2,  
+.................... 1  G     4,  
+....................    Space 2,  
+....................   
+.................... 1  Ais   1,  
+.................... 1  A     1,  
+.................... 1  Ais   4,  
+.................... 1  D     4,  
+....................    Space 2,  
+....................   
+.................... 1  G     1,  
+.................... 1  F     1,  
+.................... 1  G     2,  
+.................... 1  F     2,  
+.................... 1  E     2,  
+.................... 1  G     2,  
+.................... 1  F     4,  
+....................    Space 2,  
+....................   
+.................... 1  E     1,  
+.................... 1  F     1,  
+.................... 1  G     4,  
+....................    Space 2,  
+....................   
+.................... 1  F     1,  
+.................... 1  G     1,  
+.................... 1  A     2,  
+.................... 1  G     2,  
+.................... 1  F     2,  
+.................... 1  E     2,  
+.................... 1  D     4,  
+.................... 1  Ais   4,  
+.................... 1  A     4,  
+....................    Space 2,  
+....................   
+.................... 1  A     1,  
+.................... 1  Ais   1,  
+.................... 1  A     1,  
+.................... 1  G     1,  
+.................... 1  A     4,  
+....................    Space 2,  
+....................   
+.................... END  
+....................  
+.................... #include "Skladby\BednaOdWhisky.txt" 
+....................  // Pisnicka "Bedna od Whisky"  
+.................... //  
+.................... // Tato pisnicka je napsana ve formatu, ktery se da pouzit jak pro primy  
+.................... // preklad do firmwaru melodickeho zvonku tak i pro dodatecne nahrani  
+....................   
+.................... BEGIN    2,             // Zacatek skladby  
+.................... TEMPO    100,           // Delka nejkratsi noty v ms  
+.................... PAUSE    100,           // Delka mezery mezi notami  
+....................   
+.................... 1  A     2,  
+.................... 2  C     2,  
+.................... 2  E     2,  
+.................... 2  A     2,  
+.................... 2  G     4,  
+.................... 2  E     2,  
+.................... 2  E     2,  
+.................... 2  A     2,  
+.................... 2  G     2,  
+.................... 2  E     2,  
+.................... 2  D     2,  
+.................... 2  E     4,  
+....................    Space 4,  
+.................... 1  A     2,  
+.................... 2  C     2,  
+.................... 2  E     2,  
+.................... 2  A     2,  
+.................... 2  G     2,  
+.................... 2  G     2,  
+.................... 2  E     2,  
+.................... 2  E     2,  
+.................... 1  A     2,  
+.................... 2  E     2,  
+.................... 1  H     2,  
+.................... 2  E     2,  
+.................... 1  A     4,  
+....................    Space 4,  
+.................... 1  A     2,  
+.................... 2  C     2,  
+.................... 2  E     2,  
+.................... 2  A     2,  
+.................... 2  G     2,  
+.................... 2  G     2,  
+.................... 2  E     4,  
+.................... 2  A     2,  
+.................... 2  G     2,  
+.................... 2  E     2,  
+.................... 2  D     2,  
+.................... 2  E     4,  
+....................    Space 2,  
+.................... 2  E     2,  
+.................... 1  A     2,  
+.................... 2  C     2,  
+.................... 2  E     2,  
+.................... 2  A     2,  
+.................... 2  G     2,  
+.................... 2  E     4,  
+.................... 2  E     2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  GIS   2,  
+.................... 2  H     2,  
+.................... 2  A     4,  
+....................    Space 8,  
+.................... 2  E     2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  GIS   2,  
+.................... 2  FIS   2,  
+.................... 2  A     4,  
+.................... 2  A     2,  
+.................... 2  H     2,  
+.................... 2  H     2,  
+.................... 2  A     2,  
+.................... 2  H     2,  
+.................... 3  CIS   2,  
+.................... 2  A     4,  
+.................... 2  E     2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  GIS   2,  
+.................... 2  FIS   2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  H     2,  
+.................... 2  H     2,  
+.................... 2  A     2,  
+.................... 2  GIS   2,  
+.................... 2  A     4,  
+....................    Space 2,  
+.................... 2  E     2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  GIS   2,  
+.................... 2  FIS   2,  
+.................... 2  A     4,  
+.................... 2  A     2,  
+.................... 2  H     2,  
+.................... 2  H     2,  
+.................... 2  A     2,  
+.................... 2  H     2,  
+.................... 3  CIS   2,  
+.................... 2  A     4,  
+.................... 2  E     2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  A     2,  
+.................... 2  GIS   2,  
+.................... 2  FIS   2,  
+.................... 2  A     2,  
+....................    Space 2,  
+.................... 2  A     2,  
+.................... 2  H     2,  
+.................... 2  H     2,  
+.................... 2  A     2,  
+.................... 2  GIS   2,  
+.................... 2  A     8,  
+.................... 2  G     2,  
+.................... 2  A     8,  
+.................... 2  G     2,  
+.................... 2  A     8,  
+....................   
+.................... END  
+....................  
+.................... #include "Skladby\KdyzMeBaliZaVojacka.txt" 
+....................  // Pisnicka "Kdyz me brali za vojacka"  
+.................... //  
+.................... // Tato pisnicka je napsana ve formatu, ktery se da pouzit jak pro primy  
+.................... // preklad do firmwaru melodickeho zvonku tak i pro dodatecne nahrani  
+....................   
+.................... BEGIN    2,             // Zacatek skladby  
+.................... TEMPO    150,           // Delka nejkratsi noty v ms  
+.................... PAUSE    100,           // Delka mezery mezi notami  
+....................   
+.................... 1  A     1,  
+.................... 2  C     1,  
+.................... 2  E     1,  
+.................... 2  D     1,  
+.................... 2  C     1,  
+.................... 1  H     1,  
+.................... 2  C     2,  
+.................... 2  D     1,  
+.................... 2  E     2,  
+.................... 2  D     1,  
+.................... 2  G     1,  
+.................... 2  G     1,  
+.................... 2  G     1,  
+.................... 2  G     1,  
+.................... 2  A     1,  
+.................... 2  E     2,  
+....................    Space 4,  
+.................... 2  D     1,  
+.................... 2  F     1,  
+.................... 2  A     1,  
+.................... 2  G     1,  
+.................... 2  F     1,  
+.................... 2  E     1,  
+.................... 2  E     1,  
+.................... 2  F     1,  
+.................... 2  E     1,  
+.................... 2  C     1,  
+.................... 1  A     2,  
+.................... 1  GIS   1,  
+.................... 1  H     1,  
+.................... 2  E     1,  
+.................... 2  D     1,  
+.................... 1  H     1,  
+.................... 2  C     1,  
+.................... 1  A     2,  
+....................    Space 2,  
+.................... 1  H     2,  
+.................... 2  C     2,  
+....................    Space 2,  
+.................... 2  D     2,  
+.................... 2  E     1,  
+.................... 2  E     1,  
+.................... 2  E     1,  
+.................... 2  D     1,  
+.................... 1  H     1,  
+.................... 2  C     1,  
+.................... 1  A     2,  
+....................   
+.................... END  
+....................  
+.................... #include "Skladby\Medvedi.txt" 
+....................  // Pisnicka "Medvedi"  
+.................... //  
+.................... // Tato pisnicka je napsana ve formatu, ktery se da pouzit jak pro primy  
+.................... // preklad do firmwaru melodickeho zvonku tak i pro dodatecne nahrani  
+....................   
+.................... BEGIN    1,             // Zacatek skladby  
+.................... TEMPO    150,           // Delka nejkratsi noty v ms  
+.................... PAUSE    100,           // Delka mezery mezi notami  
+....................   
+.................... 1  C     1,             // 1  
+.................... 1  C     1,  
+.................... 1  C     1,  
+.................... 1  E     1,  
+.................... 1  D     1,  
+.................... 0  G     1,  
+....................   
+.................... 1  C     3,             // 2  
+....................    Space 4,  
+....................   
+.................... 1  E     1,             // 3  
+.................... 1  E     1,  
+.................... 1  E     1,  
+.................... 1  E     1,  
+.................... 1  D     1,  
+.................... 1  G     1,  
+....................   
+.................... 1  E     2,             // 4  
+....................    Space 4,  
+....................   
+.................... 1  G     1,             // 5  
+.................... 1  G     1,  
+.................... 1  A     1,  
+.................... 1  G     1,  
+.................... 1  F     1,  
+.................... 1  E     1,  
+....................   
+.................... 1  F     1,             // 6  
+.................... 1  A     1,  
+.................... 1  G     1,  
+.................... 1  F     1,  
+.................... 1  E     1,  
+.................... 1  D     1,  
+....................   
+.................... 1  C     1,             // 7  
+.................... 0  H     1,  
+.................... 1  C     1,  
+.................... 1  E     1,  
+.................... 1  D     1,  
+.................... 0  G     1,  
+....................   
+.................... 1  C     3,             // 8  
+....................    Space 4,  
+.................... 1  A     1,             // 9  
+.................... 1  A     1,  
+.................... 1  A     1,  
+.................... 1  A     1,  
+.................... 1  H     1,  
+.................... 2  D     1,  
+....................   
+.................... 2  C     4,             // 10  
+....................    Space 2,  
+....................   
+.................... 2  E     1,             // 11  
+.................... 2  E     1,  
+.................... 2  E     1,  
+.................... 2  E     1,  
+.................... 2  D     1,  
+.................... 2  G     1,  
+....................   
+.................... 2  E     4,             // 12  
+....................    Space 2,  
+....................   
+.................... 2  G     1,             // 13  
+.................... 2  G     1,  
+.................... 2  A     1,  
+.................... 2  G     1,  
+.................... 2  F     1,  
+.................... 2  E     1,  
+....................   
+.................... 2  F     1,             // 14  
+.................... 2  A     1,  
+.................... 2  G     1,  
+.................... 2  F     1,  
+.................... 2  E     1,  
+.................... 2  D     1,  
+....................   
+.................... 2  C     1,             // 15  
+.................... 1  H     1,  
+.................... 2  C     1,  
+.................... 2  E     1,  
+.................... 2  D     1,  
+.................... 1  G     1,  
+....................   
+.................... 2  C     4,             // 16  
+....................    Space 2,  
+....................   
+.................... 1  C     6,             // 1  
+.................... 0  G     2,  
+....................   
+.................... 1  D     3,             // 2  
+....................    Space 3,  
+....................   
+.................... 1  G     1,             // 3  
+.................... 1  G     1,  
+.................... 1  Fis   1,  
+.................... 1  G     1,  
+.................... 1  A     1,  
+.................... 1  Fis   1,  
+....................   
+.................... 1  G     2,             // 4  
+....................    Space 4,  
+....................   
+.................... 1  G     1,             // 5  
+.................... 1  G     1,  
+.................... 1  A     1,  
+.................... 1  G     1,  
+.................... 1  F     1,  
+.................... 1  E     1,  
+....................   
+.................... 1  F     1,             // 6  
+.................... 1  A     1,  
+.................... 1  G     1,  
+.................... 1  F     1,  
+.................... 1  E     1,  
+.................... 1  D     1,  
+....................   
+.................... 1  C     6,             // 7  
+.................... 1  E     2,  
+....................   
+.................... 1  D     3,             // 8  
+....................    Space 3,  
+....................   
+.................... 1  C     6,             // 9  
+.................... 0  G     2,  
+....................   
+.................... 1  D     3,             // 10  
+....................    Space 3,  
+....................   
+.................... 1  G     1,             // 11  
+.................... 1  G     1,  
+.................... 1  Fis   1,  
+.................... 1  G     1,  
+.................... 1  A     1,  
+.................... 1  Fis   1,  
+....................   
+.................... 1  G     2,             // 12  
+....................    Space 4,  
+....................   
+.................... 1  G     1,             // 13  
+.................... 1  G     1,  
+.................... 1  A     1,  
+.................... 1  G     1,  
+.................... 1  F     1,  
+.................... 1  E     1,  
+....................   
+.................... 1  F     1,             // 14  
+.................... 1  A     1,  
+.................... 1  G     1,  
+.................... 1  F     1,  
+.................... 1  E     1,  
+.................... 1  D     1,  
+....................   
+.................... 1  C     1,             // 15  
+.................... 0  H     1,  
+.................... 1  C     1,  
+.................... 1  E     1,  
+.................... 1  D     1,  
+.................... 0  G     1,  
+....................   
+.................... 1  C     2,             // 16  
+....................    Space 4,  
+....................   
+.................... END  
+....................  
+....................   
+.................... // Koncova znacka a konec oblasti pro skladby  
+.................... ENDOFDATA  
+.................... }  
+....................   
+.................... // Zruseni definic maker pro definici skladeb  
+.................... // V dalsim programu uz nebudou potreba  
+.................... #undef   BEGIN  
+.................... #undef   TEMPO  
+.................... #undef   PAUSE  
+.................... #undef   END  
+.................... #undef   C  
+.................... #undef   Cis  
+.................... #undef   D  
+.................... #undef   Dis  
+.................... #undef   E  
+.................... #undef   F  
+.................... #undef   Fis  
+.................... #undef   G  
+.................... #undef   Gis  
+.................... #undef   A  
+.................... #undef   Ais  
+.................... #undef   H  
+.................... #undef   Space  
+....................  
+....................   
+.................... #define  RXD         PIN_B1               // Port pro RS232  
+.................... #use delay(CLOCK=20000000)                // Konfigurace pro casovani RS232  
+.................... #use rs232(BAUD=9600,RCV=RXD,INVERT,PARITY=N,BITS=8)     // Prenosove parametry RS232  
+*
+0152:  MOVLW  08
+0153:  MOVWF  77
+0154:  BSF    03.5
+0155:  BSF    06.1
+0156:  BCF    03.5
+0157:  BTFSS  06.1
+0158:  GOTO   157
+0159:  CLRF   61
+015A:  BSF    77.7
+015B:  GOTO   16A
+015C:  BCF    77.7
+015D:  GOTO   16A
+015E:  BCF    03.0
+015F:  BTFSS  06.1
+0160:  BSF    03.0
+0161:  RRF    61,F
+0162:  BSF    77.6
+0163:  GOTO   16A
+0164:  BCF    77.6
+0165:  DECFSZ 77,F
+0166:  GOTO   15E
+0167:  MOVF   61,W
+0168:  MOVWF  78
+0169:  GOTO   176
+016A:  MOVLW  A7
+016B:  BTFSC  77.7
+016C:  MOVLW  2D
+016D:  MOVWF  78
+016E:  DECFSZ 78,F
+016F:  GOTO   16E
+0170:  NOP
+0171:  BTFSC  77.7
+0172:  GOTO   15C
+0173:  BTFSC  77.6
+0174:  GOTO   164
+0175:  GOTO   15E
+0176:  RETLW  00
+....................   
+....................   
+.................... // Sada globalnich promennych  
+.................... // --------------------------  
+.................... // Vyuzivame globalni promenne protoze je to vyhodne z hlediska spotreby zdroju. Usetri  
+.................... // se vyznmane mnoho pameti programu pri predavani parametru  
+....................   
+....................   
+.................... unsigned int16 Adr;                       // Adresovy ukazatel do pameti skladeb  
+.................... unsigned int16 Data;                      // Prectena data nebo data pro zapis  
+.................... unsigned int1  Mode;                      // 0=rezim testovani, 1=rezim zapisu do FLASH  
+....................   
+.................... unsigned int16 Tempo;                     // Tempo (delka nejkratsi skladby v ms)  
+.................... unsigned int16 Pause;                     // Delka mezery mezi notami v ms  
+.................... unsigned int8  Octava;                    // Posunuti skladby v oktavach  
+....................   
+.................... unsigned int8  Beep;                      // Druh pipnuti pro proceduru SoundSpec  
+.................... unsigned int1  Error;                     // Priznak chyby  
+....................   
+.................... unsigned int8  CisloSkladby;              // Cislo skladby pro proceduru Find a Play  
+....................   
+....................   
+.................... // Zvuky, posloupnost zadaneho poctu tonu  
+.................... #define SoundEndOfLine  0x01              // Kratke pipnuti na konci radky  
+.................... #define SoundPGM        0x03              // Trilek pri vstupu do rezimu programovani  
+.................... #define SoundPostPlay   0x03              // Po ukonceni prehravani  
+.................... #define SoundERASE      0x02              // Zvuk pri smazani bloku FLASH pameti  
+.................... #define SoundERR        0x05              // Chyba syntaxe  
+.................... void SpecBeep()  
+.................... // Data - pocet pipnuti, 0 znamena ticho  
+.................... {  
+....................    int Oct;  
+....................   
+....................    if (Error) Beep=SoundERR;  
+*
+013A:  BTFSS  2D.1
+013B:  GOTO   13E
+013C:  MOVLW  05
+013D:  MOVWF  33
+....................   
+....................    for(Oct=2;Beep!=0;Beep--)  
+013E:  MOVLW  02
+013F:  MOVWF  61
+0140:  MOVF   33,F
+0141:  BTFSC  03.2
+0142:  GOTO   150
+....................    {  
+....................       SoundNote(SOUND_A,Oct++,50);  
+0143:  MOVF   61,W
+0144:  INCF   61,F
+0145:  MOVWF  62
+0146:  MOVLW  09
+0147:  MOVWF  69
+0148:  MOVF   62,W
+0149:  MOVWF  6A
+014A:  CLRF   6C
+014B:  MOVLW  32
+014C:  MOVWF  6B
+014D:  CALL   0E2
+....................    }  
+014E:  DECF   33,F
+014F:  GOTO   140
+....................      
+....................    Error=0;  
+0150:  BCF    2D.1
+0151:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Precti slovo z pameti programu  
+.................... int16 ReadData()  
+.................... // Adr - adresa ze ktere se cte  
+.................... // Data - prectena data  
+.................... {  
+....................    int8 a,b;                              // Pomocne promenne  
+....................   
+....................    (int8)*EEADR  = Adr;                   // Adresa, spodni cast  
+*
+01EB:  MOVF   29,W
+01EC:  BSF    03.6
+01ED:  MOVWF  0D
+....................    (int8)*EEADRH = Adr >> 8;              // Adresa, horni cast  
+01EE:  BCF    03.6
+01EF:  MOVF   2A,W
+01F0:  BSF    03.6
+01F1:  MOVWF  0F
+....................    bit_set(*EECON1,EECON1_EEPGD);         // Pamet programu  
+01F2:  BSF    03.5
+01F3:  BSF    0C.7
+....................    bit_set(*EECON1,EECON1_RD);            // Operace cteni  
+01F4:  BSF    0C.0
+....................    #ASM  
+....................    nop;                                   // Povinne nop  
+01F5:  NOP
+....................    nop;  
+....................    #ENDASM  
+01F6:  NOP
+....................    a = (int8)*EEDATA;                     // Prevezmi data  
+01F7:  BCF    03.5
+01F8:  MOVF   0C,W
+01F9:  BCF    03.6
+01FA:  MOVWF  61
+....................    b = (int8)*EEDATAH;  
+01FB:  BSF    03.6
+01FC:  MOVF   0E,W
+01FD:  BCF    03.6
+01FE:  MOVWF  62
+....................    Data=make16(b,a);                      // Sestav vysledek ze 2 bajtu  
+01FF:  MOVF   62,W
+0200:  MOVWF  2C
+0201:  MOVF   61,W
+0202:  MOVWF  2B
+0203:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Smazani cele pameti vyhrazene pro skladby  
+.................... void Erase()  
+.................... {  
+....................    for(Adr=STARTMEM; Adr<=ENDMEM; Adr++)  // Cela oblast  
+*
+047D:  MOVLW  06
+047E:  MOVWF  2A
+047F:  CLRF   29
+0480:  MOVF   2A,W
+0481:  SUBLW  07
+0482:  BTFSS  03.0
+0483:  GOTO   4B3
+....................    {  
+....................       ReadData();  
+0484:  CALL   1EB
+....................       if (Data!=0x3FFF)                   // Mazu jen bloky, ktere to potrebuji  
+0485:  INCFSZ 2B,W
+0486:  GOTO   48B
+0487:  MOVF   2C,W
+0488:  SUBLW  3F
+0489:  BTFSC  03.2
+048A:  GOTO   4AF
+....................       {  
+....................          if (input(POWER_PIC)!=0) return; // Nezapisuj pokud neni jumper povoleni programovani  
+048B:  BSF    03.5
+048C:  BSF    05.3
+048D:  MOVLW  00
+048E:  BCF    03.5
+048F:  BTFSC  05.3
+0490:  MOVLW  01
+0491:  XORLW  00
+0492:  BTFSC  03.2
+0493:  GOTO   495
+0494:  GOTO   4B3
+....................          (int8)*EEADR  = Adr;             // Adresa bloku, spodni cast  
+0495:  MOVF   29,W
+0496:  BSF    03.6
+0497:  MOVWF  0D
+....................          (int8)*EEADRH = Adr >> 8;        // Adresa bloku, horni cast  
+0498:  BCF    03.6
+0499:  MOVF   2A,W
+049A:  BSF    03.6
+049B:  MOVWF  0F
+....................          bit_set(*EECON1,EECON1_EEPGD);   // Pamet programu  
+049C:  BSF    03.5
+049D:  BSF    0C.7
+....................          bit_set(*EECON1,EECON1_WREN);    // Povolit zapis  
+049E:  BSF    0C.2
+....................          bit_set(*EECON1,EECON1_FREE);    // Operace mazani  
+049F:  BSF    0C.4
+....................          (int8)*EECON2 = 0x55;            // Povinna segvence pro zapis  
+04A0:  MOVLW  55
+04A1:  MOVWF  0D
+....................          (int8)*EECON2 = 0xAA;  
+04A2:  MOVLW  AA
+04A3:  MOVWF  0D
+....................          bit_set(*EECON1,EECON1_WR);      // Zahajeni mazani  
+04A4:  BSF    0C.1
+....................          #ASM  
+....................          nop;                             // Povinne prazdne instrukce  
+04A5:  NOP
+....................          nop;  
+....................          #ENDASM  
+04A6:  NOP
+....................          bit_clear(*EECON1,EECON1_WREN);  // Uz ne zapis  
+04A7:  BCF    0C.2
+....................          bit_clear(*EECON1,EECON1_FREE);  // Uz ne mazani  
+04A8:  BCF    0C.4
+....................          bit_clear(*EECON1,EECON1_EEPGD); // Uz ne pamet programu  
+04A9:  BCF    0C.7
+....................          Beep=SoundERASE;  
+04AA:  MOVLW  02
+04AB:  BCF    03.5
+04AC:  BCF    03.6
+04AD:  MOVWF  33
+....................          SpecBeep();  
+04AE:  CALL   13A
+....................       }  
+....................    }  
+04AF:  INCF   29,F
+04B0:  BTFSC  03.2
+04B1:  INCF   2A,F
+04B2:  GOTO   480
+.................... }  
+....................   
+....................   
+.................... // Zapis do pameti programu po jednotlivych slovech.  
+.................... // Soucastka vyzaduje zapis vzdy celych osmi slov najednou. Vyuziva se toho, ze pamet FLASH  
+.................... // umi zapisovat jen smerem do nuly a tak staci na pozice, ktere zrovna nechceme programovat  
+.................... // zapsat same jednicky cimz se stav jejich stav nezmeni.  
+.................... void WriteData()  
+.................... // Adr - adresa, kam se bude zapisovat  
+.................... // Data - data, ktera se budou zapisovat  
+.................... {  
+....................    int i;  
+....................   
+....................    bit_set(*EECON1,EECON1_EEPGD);         // Pamet programu  
+*
+0300:  BSF    03.5
+0301:  BSF    03.6
+0302:  BSF    0C.7
+....................    bit_set(*EECON1,EECON1_WREN);          // Zapis  
+0303:  BSF    0C.2
+....................    (int8)*EEADR  = Adr & ~3;              // Adresa, spodni cast, zaokrouhleno dolu na nasobek 8  
+0304:  BCF    03.5
+0305:  BCF    03.6
+0306:  MOVF   29,W
+0307:  ANDLW  FC
+0308:  BSF    03.6
+0309:  MOVWF  0D
+....................    (int8)*EEADRH = Adr >> 8;              // Adresa, horni cast  
+030A:  BCF    03.6
+030B:  MOVF   2A,W
+030C:  BSF    03.6
+030D:  MOVWF  0F
+....................    for (i=0; i<4; i++)  
+030E:  BCF    03.6
+030F:  CLRF   61
+0310:  MOVF   61,W
+0311:  SUBLW  03
+0312:  BTFSS  03.0
+0313:  GOTO   33B
+....................    {  
+....................       if ((Adr & 3) == i)                 // Pokud je adresa slova v bloku totozna s pozadovanou  
+0314:  MOVF   29,W
+0315:  ANDLW  03
+0316:  MOVWF  62
+0317:  MOVF   2A,W
+0318:  ANDLW  00
+0319:  MOVWF  63
+031A:  MOVF   61,W
+031B:  SUBWF  62,W
+031C:  BTFSS  03.2
+031D:  GOTO   32A
+031E:  MOVF   63,F
+031F:  BTFSS  03.2
+0320:  GOTO   32A
+....................       {  
+....................          (int8)*EEDATA =Data;             // Platne slovo, spodni cast  
+0321:  MOVF   2B,W
+0322:  BSF    03.6
+0323:  MOVWF  0C
+....................          (int8)*EEDATAH=Data >> 8;        // Platne slovo, horni cast  
+0324:  BCF    03.6
+0325:  MOVF   2C,W
+0326:  BSF    03.6
+0327:  MOVWF  0E
+....................       }  
+....................       else                                // Ostatni bunky nemenime  
+0328:  GOTO   32E
+0329:  BCF    03.6
+....................       {  
+....................          (int8)*EEDATA =0xFF;             // Zbytek same jednicky  
+032A:  MOVLW  FF
+032B:  BSF    03.6
+032C:  MOVWF  0C
+....................          (int8)*EEDATAH=0xFF;  
+032D:  MOVWF  0E
+....................       }  
+....................       (int8)*EECON2 = 0x55;               // Povinna sekvence pro zapis  
+032E:  MOVLW  55
+032F:  BSF    03.5
+0330:  MOVWF  0D
+....................       (int8)*EECON2 = 0xAA;  
+0331:  MOVLW  AA
+0332:  MOVWF  0D
+....................       bit_set(*EECON1,EECON1_WR);         // Zahajeni zapisu  
+0333:  BSF    0C.1
+....................       #ASM  
+....................       nop;                                // Povinne dve prazdne instrukce  
+0334:  NOP
+....................       nop;  
+....................       #ENDASM  
+0335:  NOP
+....................       ((int8)*EEADR) ++;                  // Dalsi slovo  
+0336:  BCF    03.5
+0337:  INCF   0D,F
+....................    }  
+0338:  BCF    03.6
+0339:  INCF   61,F
+033A:  GOTO   310
+....................    bit_clear(*EECON1,EECON1_WREN);        // Konec zapisu  
+033B:  BSF    03.5
+033C:  BSF    03.6
+033D:  BCF    0C.2
+....................    bit_clear(*EECON1,EECON1_EEPGD);       // Uz ne pamet programu (bezpecnost)  
+033E:  BCF    0C.7
+.................... }  
+....................   
+....................   
+.................... // Zapise data Data na adresu Adr a provede posun na dalsi adresu, zapisuje se jen do  
+.................... // dovolene oblasti pameti a jen v pripade, ze je Mode=1  
+.................... void WriteDataInc()  
+.................... // Data - co se zapisuje  
+.................... // Adr - kam se zapisuje, po zapisu se adresa posouva  
+.................... {  
+....................    if (~Mode) return;                     // Neni rezim zapisu  
+*
+02DC:  BTFSC  2D.0
+02DD:  GOTO   2DF
+02DE:  GOTO   346
+....................    if ( (Adr>=STARTMEM) & (Adr<=ENDMEM) & (input(POWER_PIC)==0) )  
+02DF:  MOVF   2A,W
+02E0:  SUBLW  05
+02E1:  BTFSS  03.0
+02E2:  GOTO   2E5
+02E3:  MOVLW  00
+02E4:  GOTO   2E6
+02E5:  MOVLW  01
+02E6:  MOVWF  61
+02E7:  MOVF   2A,W
+02E8:  SUBLW  07
+02E9:  BTFSC  03.0
+02EA:  GOTO   2ED
+02EB:  MOVLW  00
+02EC:  GOTO   2EE
+02ED:  MOVLW  01
+02EE:  ANDWF  61,W
+02EF:  MOVWF  62
+02F0:  BSF    03.5
+02F1:  BSF    05.3
+02F2:  MOVLW  00
+02F3:  BCF    03.5
+02F4:  BTFSC  05.3
+02F5:  MOVLW  01
+02F6:  XORLW  00
+02F7:  BTFSC  03.2
+02F8:  GOTO   2FB
+02F9:  MOVLW  00
+02FA:  GOTO   2FC
+02FB:  MOVLW  01
+02FC:  ANDWF  62,W
+02FD:  XORLW  00
+02FE:  BTFSC  03.2
+02FF:  GOTO   345
+....................    {  
+....................       WriteData();  
+....................       Adr++;  
+*
+033F:  BCF    03.5
+0340:  BCF    03.6
+0341:  INCF   29,F
+0342:  BTFSC  03.2
+0343:  INCF   2A,F
+....................    }  
+....................    else  
+0344:  GOTO   346
+....................    {  
+....................       Error=1;  
+0345:  BSF    2D.1
+....................    }  
+0346:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Najdi zacatek zadaneho cisla skladby. Promenna Adr ukazuje na zacatek skladby.  
+.................... // Neni-li skladba nalezena ukazuje Adr na koncovou znacku (0x3FFF) posledni skladby  
+.................... // nebo na konec pameti.  
+.................... int1 Find()  
+.................... // CisloSkladby - poradove cislo skladby  
+.................... // Adr - adresa zacatku skladby  
+.................... {  
+....................    Adr=STARTMEM-1;                        // Od zacatku oblasti pro skladby  
+*
+0204:  MOVLW  05
+0205:  MOVWF  2A
+0206:  MOVLW  FF
+0207:  MOVWF  29
+....................    for(;1;)  
+....................    {  
+....................       Adr++;  
+0208:  INCF   29,F
+0209:  BTFSC  03.2
+020A:  INCF   2A,F
+....................       ReadData();                         // Precti data  
+020B:  CALL   1EB
+....................       if (Data==ENDOFDATA) return 1;      // Priznak konce dat  
+020C:  INCFSZ 2B,W
+020D:  GOTO   215
+020E:  MOVF   2C,W
+020F:  SUBLW  3F
+0210:  BTFSS  03.2
+0211:  GOTO   215
+0212:  MOVLW  01
+0213:  MOVWF  78
+0214:  GOTO   232
+....................       if (Adr==ENDMEM+1)   return 1;      // Uz jsme prosli celou pamet  
+0215:  MOVF   29,F
+0216:  BTFSS  03.2
+0217:  GOTO   21F
+0218:  MOVF   2A,W
+0219:  SUBLW  08
+021A:  BTFSS  03.2
+021B:  GOTO   21F
+021C:  MOVLW  01
+021D:  MOVWF  78
+021E:  GOTO   232
+....................       if ((Data&MASKBEGIN)==DATABEGIN)    // Priznak zacatku skladby  
+021F:  MOVF   2B,W
+0220:  ANDLW  00
+0221:  MOVWF  61
+0222:  MOVF   2C,W
+0223:  ANDLW  38
+0224:  MOVWF  62
+0225:  MOVF   61,F
+0226:  BTFSS  03.2
+0227:  GOTO   231
+0228:  MOVF   62,W
+0229:  SUBLW  20
+022A:  BTFSS  03.2
+022B:  GOTO   231
+....................       {  
+....................          CisloSkladby--;                  // Otestuj pocitadlo skladeb  
+022C:  DECFSZ 34,F
+....................          if (CisloSkladby==0) return 0;   // Je to tato skladba  
+022D:  GOTO   231
+022E:  MOVLW  00
+022F:  MOVWF  78
+0230:  GOTO   232
+....................       }  
+....................    }  
+0231:  GOTO   208
+0232:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Zahraj jednu notu  
+.................... void PlayData()  
+.................... // Data = zakodovana nota  
+.................... // Tempo, Octava, Pause = parametry hrane noty  
+.................... {  
+....................    SoundNote((int8)Data&0xF,Octava+(((int8)Data>>4)&0x7),Tempo*((Data>>7)&0x3F));   // Zahraj notu  
+0233:  MOVF   2B,W
+0234:  ANDLW  0F
+0235:  MOVWF  61
+0236:  SWAPF  2B,W
+0237:  MOVWF  77
+0238:  MOVLW  0F
+0239:  ANDWF  77,F
+023A:  MOVF   77,W
+023B:  ANDLW  07
+023C:  ADDWF  32,W
+023D:  MOVWF  63
+023E:  RRF    2C,W
+023F:  MOVWF  65
+0240:  RRF    2B,W
+0241:  MOVWF  64
+0242:  RRF    65,F
+0243:  RRF    64,F
+0244:  RRF    65,F
+0245:  RRF    64,F
+0246:  RRF    65,F
+0247:  RRF    64,F
+0248:  RRF    65,F
+0249:  RRF    64,F
+024A:  RRF    65,F
+024B:  RRF    64,F
+024C:  RRF    65,F
+024D:  RRF    64,F
+024E:  MOVLW  01
+024F:  ANDWF  65,F
+0250:  MOVF   64,W
+0251:  ANDLW  3F
+0252:  MOVWF  77
+0253:  MOVF   65,W
+0254:  ANDLW  00
+0255:  MOVWF  7A
+0256:  MOVF   77,W
+0257:  MOVWF  66
+0258:  MOVF   7A,W
+0259:  MOVWF  67
+025A:  MOVF   2F,W
+025B:  MOVWF  69
+025C:  MOVF   2E,W
+025D:  MOVWF  68
+025E:  MOVF   7A,W
+025F:  MOVWF  6B
+0260:  MOVF   77,W
+0261:  MOVWF  6A
+0262:  CALL   177
+0263:  MOVF   79,W
+0264:  MOVWF  68
+0265:  MOVF   78,W
+0266:  MOVWF  67
+0267:  MOVF   61,W
+0268:  MOVWF  69
+0269:  MOVF   63,W
+026A:  MOVWF  6A
+026B:  MOVF   79,W
+026C:  MOVWF  6C
+026D:  MOVF   78,W
+026E:  MOVWF  6B
+026F:  CALL   0E2
+....................    SoundNote(SOUND_Space,0,Pause);                                      // Zahraj mezeru mezi notami  
+0270:  MOVLW  0C
+0271:  MOVWF  69
+0272:  CLRF   6A
+0273:  MOVF   31,W
+0274:  MOVWF  6C
+0275:  MOVF   30,W
+0276:  MOVWF  6B
+0277:  CALL   0E2
+0278:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Zahraj skladbu od zadane adresy v promenne Adr.  
+.................... void Play()  
+.................... // CisloSkladby - cislo skladby k hrani  
+.................... {  
+....................    if (Find())                            // Najdi zacatek skladby v pameti skladeb  
+0279:  CALL   204
+027A:  MOVF   78,F
+027B:  BTFSC  03.2
+027C:  GOTO   27E
+....................    {  
+....................       return;                             // Skladba nenalezena  
+027D:  GOTO   2DB
+....................    }  
+....................   
+....................    Tempo=100;                             // Default delka noty  
+027E:  CLRF   2F
+027F:  MOVLW  64
+0280:  MOVWF  2E
+....................    Pause=100;                             // Default mezera mezi notami  
+0281:  CLRF   31
+0282:  MOVWF  30
+....................   
+....................    Octava=Data&~MASKBEGIN;                // Posunuti oktav (povinna soucast zacatku skladby)  
+0283:  MOVF   2B,W
+0284:  MOVWF  32
+....................    Adr++;  
+0285:  INCF   29,F
+0286:  BTFSC  03.2
+0287:  INCF   2A,F
+....................   
+....................    for (;1;)  
+....................    {  
+....................       if (Adr==ENDMEM+1)                  return;                 // Konec pametove oblasti  
+0288:  MOVF   29,F
+0289:  BTFSS  03.2
+028A:  GOTO   290
+028B:  MOVF   2A,W
+028C:  SUBLW  08
+028D:  BTFSS  03.2
+028E:  GOTO   290
+028F:  GOTO   2DB
+....................       ReadData();                                                 // Vezmi data  
+0290:  CALL   1EB
+....................       Adr++;                                                      // Posun adresu  
+0291:  INCF   29,F
+0292:  BTFSC  03.2
+0293:  INCF   2A,F
+....................       if (Data==ENDOFDATA)                return;                 // Konec dat  
+0294:  INCFSZ 2B,W
+0295:  GOTO   29B
+0296:  MOVF   2C,W
+0297:  SUBLW  3F
+0298:  BTFSS  03.2
+0299:  GOTO   29B
+029A:  GOTO   2DB
+....................       if ((Data&MASKBEGIN)==DATABEGIN)    return;                 // Zacatek dalsi skladby  
+029B:  MOVF   2B,W
+029C:  ANDLW  00
+029D:  MOVWF  61
+029E:  MOVF   2C,W
+029F:  ANDLW  38
+02A0:  MOVWF  62
+02A1:  MOVF   61,F
+02A2:  BTFSS  03.2
+02A3:  GOTO   2A9
+02A4:  MOVF   62,W
+02A5:  SUBLW  20
+02A6:  BTFSS  03.2
+02A7:  GOTO   2A9
+02A8:  GOTO   2DB
+....................       if ((Data&MASKTEMPO)==DATATEMPO)    Tempo=Data&~DATATEMPO;  // Paramter TEMPO  
+02A9:  MOVF   2B,W
+02AA:  ANDLW  00
+02AB:  MOVWF  61
+02AC:  MOVF   2C,W
+02AD:  ANDLW  38
+02AE:  MOVWF  62
+02AF:  MOVF   61,F
+02B0:  BTFSS  03.2
+02B1:  GOTO   2BB
+02B2:  MOVF   62,W
+02B3:  SUBLW  28
+02B4:  BTFSS  03.2
+02B5:  GOTO   2BB
+02B6:  MOVF   2B,W
+02B7:  MOVWF  2E
+02B8:  MOVF   2C,W
+02B9:  ANDLW  D7
+02BA:  MOVWF  2F
+....................       if ((Data&MASKPAUSE)==DATAPAUSE)    Pause=Data&~DATAPAUSE;  // Parametr PAUSE  
+02BB:  MOVF   2B,W
+02BC:  ANDLW  00
+02BD:  MOVWF  61
+02BE:  MOVF   2C,W
+02BF:  ANDLW  38
+02C0:  MOVWF  62
+02C1:  MOVF   61,F
+02C2:  BTFSS  03.2
+02C3:  GOTO   2CD
+02C4:  MOVF   62,W
+02C5:  SUBLW  30
+02C6:  BTFSS  03.2
+02C7:  GOTO   2CD
+02C8:  MOVF   2B,W
+02C9:  MOVWF  30
+02CA:  MOVF   2C,W
+02CB:  ANDLW  CF
+02CC:  MOVWF  31
+....................       if ((Data&MASKNOTE)==0)                                     // Nota  
+02CD:  MOVF   2B,W
+02CE:  ANDLW  00
+02CF:  MOVWF  61
+02D0:  MOVF   2C,W
+02D1:  ANDLW  20
+02D2:  MOVWF  62
+02D3:  MOVF   61,F
+02D4:  BTFSS  03.2
+02D5:  GOTO   2DA
+02D6:  MOVF   62,F
+02D7:  BTFSS  03.2
+02D8:  GOTO   2DA
+....................       {  
+....................          PlayData();                      // Zahraj notu  
+02D9:  CALL   233
+....................       }  
+....................    }  
+02DA:  GOTO   288
+02DB:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Vycisli cislo z bufferu, posune ukazovatko na prvni nezpracovany znak, preskakuje mezery  
+.................... int16 Number(char line[], int *a, len)  
+.................... {  
+....................    int16 Data;  
+....................    char c;  
+....................   
+....................    while((line[*a]==' ')&(*a<len))        // Vynech mezery na zacatku  
+*
+018C:  MOVF   62,W
+018D:  MOVWF  04
+018E:  MOVF   61,W
+018F:  ADDWF  00,W
+0190:  MOVWF  04
+0191:  MOVF   00,W
+0192:  SUBLW  20
+0193:  BTFSC  03.2
+0194:  GOTO   197
+0195:  MOVLW  00
+0196:  GOTO   198
+0197:  MOVLW  01
+0198:  MOVWF  69
+0199:  MOVF   62,W
+019A:  MOVWF  04
+019B:  MOVF   63,W
+019C:  SUBWF  00,W
+019D:  BTFSS  03.0
+019E:  GOTO   1A1
+019F:  MOVLW  00
+01A0:  GOTO   1A2
+01A1:  MOVLW  01
+01A2:  ANDWF  69,W
+01A3:  XORLW  00
+01A4:  BTFSC  03.2
+01A5:  GOTO   1AA
+....................       (*a)++;                             // Posouvej ukazovatko  
+01A6:  MOVF   62,W
+01A7:  MOVWF  04
+01A8:  INCF   00,F
+01A9:  GOTO   18C
+....................   
+....................    Data=0;  
+01AA:  CLRF   65
+01AB:  CLRF   64
+....................    while (1)  
+....................    {  
+....................       if (*a>=len) return Data;           // Konec retezce  
+01AC:  MOVF   62,W
+01AD:  MOVWF  04
+01AE:  MOVF   63,W
+01AF:  SUBWF  00,W
+01B0:  BTFSS  03.0
+01B1:  GOTO   1B7
+01B2:  MOVF   64,W
+01B3:  MOVWF  78
+01B4:  MOVF   65,W
+01B5:  MOVWF  79
+01B6:  GOTO   1EA
+....................       c=line[*a];                         // Vezmi znak z pole  
+01B7:  MOVF   62,W
+01B8:  MOVWF  04
+01B9:  MOVF   61,W
+01BA:  ADDWF  00,W
+01BB:  MOVWF  04
+01BC:  MOVF   00,W
+01BD:  MOVWF  66
+....................       if ((c<'0')|(c>'9')) return Data;   // Koncime pokud znak neni cislice  
+01BE:  MOVF   66,W
+01BF:  SUBLW  2F
+01C0:  BTFSC  03.0
+01C1:  GOTO   1C4
+01C2:  MOVLW  00
+01C3:  GOTO   1C5
+01C4:  MOVLW  01
+01C5:  MOVWF  67
+01C6:  MOVF   66,W
+01C7:  SUBLW  39
+01C8:  BTFSS  03.0
+01C9:  GOTO   1CC
+01CA:  MOVLW  00
+01CB:  GOTO   1CD
+01CC:  MOVLW  01
+01CD:  IORWF  67,W
+01CE:  XORLW  00
+01CF:  BTFSC  03.2
+01D0:  GOTO   1D6
+01D1:  MOVF   64,W
+01D2:  MOVWF  78
+01D3:  MOVF   65,W
+01D4:  MOVWF  79
+01D5:  GOTO   1EA
+....................       Data = Data * 10 + (c-'0');         // Pouzij cislici  
+01D6:  MOVF   65,W
+01D7:  MOVWF  69
+01D8:  MOVF   64,W
+01D9:  MOVWF  68
+01DA:  CLRF   6B
+01DB:  MOVLW  0A
+01DC:  MOVWF  6A
+01DD:  CALL   177
+01DE:  MOVLW  30
+01DF:  SUBWF  66,W
+01E0:  ADDWF  78,W
+01E1:  MOVWF  64
+01E2:  MOVF   79,W
+01E3:  MOVWF  65
+01E4:  BTFSC  03.0
+01E5:  INCF   65,F
+....................       (*a)++;                             // Dalsi znak  
+01E6:  MOVF   62,W
+01E7:  MOVWF  04
+01E8:  INCF   00,F
+....................    }  
+01E9:  GOTO   1AC
+01EA:  RETLW  00
+.................... }  
+....................   
+....................   
+.................... // Vyhledej klicove slovo a vrat jeho zkraceny kod  
+.................... // Pokud slovo neexistuje vraci -1  
+.................... // Format definice - retezec ukonceny nulou + zastupny znak, na konci prazdny retezec (nula)  
+.................... const char KeyWords[] =  
+....................       {  
+....................          'P','L','A','Y',0,         'P',  
+....................          'E','R','A','S','E',0,     'E',  
+....................          'T','E','M','P','O',0,     't',  
+....................          'P','A','U','S','E',0,     'p',  
+....................          'B','E','G','I','N',0,     'B',  
+....................          'T','E','S','T',0,         'b',  
+....................          'E','N','D',0,             'Z',  
+....................          'C',0.                     SOUND_C,  
+....................          'C','I','S',0,             SOUND_Cis,  
+....................          'D',0,                     SOUND_D,  
+....................          'D','I','S',0,             SOUND_Dis,  
+....................          'E',0,                     SOUND_E,  
+....................          'F',0,                     SOUND_F,  
+....................          'F','I','S',0,             SOUND_Fis,  
+....................          'G',0,                     SOUND_G,  
+....................          'G','I','S',0,             SOUND_Gis,  
+....................          'A',0,                     SOUND_A,  
+....................          'A','I','S',0,             SOUND_Ais,  
+....................          'H',0,                     SOUND_H,  
+....................          'S','P','A','C','E',0,     SOUND_Space  
+....................       };  
+*
+0051:  BCF    0A.0
+0052:  BCF    0A.1
+0053:  BCF    0A.2
+0054:  ADDWF  02,F
+0055:  RETLW  50
+0056:  RETLW  4C
+0057:  RETLW  41
+0058:  RETLW  59
+0059:  RETLW  00
+005A:  RETLW  50
+005B:  RETLW  45
+005C:  RETLW  52
+005D:  RETLW  41
+005E:  RETLW  53
+005F:  RETLW  45
+0060:  RETLW  00
+0061:  RETLW  45
+0062:  RETLW  54
+0063:  RETLW  45
+0064:  RETLW  4D
+0065:  RETLW  50
+0066:  RETLW  4F
+0067:  RETLW  00
+0068:  RETLW  74
+0069:  RETLW  50
+006A:  RETLW  41
+006B:  RETLW  55
+006C:  RETLW  53
+006D:  RETLW  45
+006E:  RETLW  00
+006F:  RETLW  70
+0070:  RETLW  42
+0071:  RETLW  45
+0072:  RETLW  47
+0073:  RETLW  49
+0074:  RETLW  4E
+0075:  RETLW  00
+0076:  RETLW  42
+0077:  RETLW  54
+0078:  RETLW  45
+0079:  RETLW  53
+007A:  RETLW  54
+007B:  RETLW  00
+007C:  RETLW  62
+007D:  RETLW  45
+007E:  RETLW  4E
+007F:  RETLW  44
+0080:  RETLW  00
+0081:  RETLW  5A
+0082:  RETLW  43
+0083:  RETLW  00
+0084:  RETLW  00
+0085:  RETLW  43
+0086:  RETLW  49
+0087:  RETLW  53
+0088:  RETLW  00
+0089:  RETLW  01
+008A:  RETLW  44
+008B:  RETLW  00
+008C:  RETLW  02
+008D:  RETLW  44
+008E:  RETLW  49
+008F:  RETLW  53
+0090:  RETLW  00
+0091:  RETLW  03
+0092:  RETLW  45
+0093:  RETLW  00
+0094:  RETLW  04
+0095:  RETLW  46
+0096:  RETLW  00
+0097:  RETLW  05
+0098:  RETLW  46
+0099:  RETLW  49
+009A:  RETLW  53
+009B:  RETLW  00
+009C:  RETLW  06
+009D:  RETLW  47
+009E:  RETLW  00
+009F:  RETLW  07
+00A0:  RETLW  47
+00A1:  RETLW  49
+00A2:  RETLW  53
+00A3:  RETLW  00
+00A4:  RETLW  08
+00A5:  RETLW  41
+00A6:  RETLW  00
+00A7:  RETLW  09
+00A8:  RETLW  41
+00A9:  RETLW  49
+00AA:  RETLW  53
+00AB:  RETLW  00
+00AC:  RETLW  0A
+00AD:  RETLW  48
+00AE:  RETLW  00
+00AF:  RETLW  0B
+00B0:  RETLW  53
+00B1:  RETLW  50
+00B2:  RETLW  41
+00B3:  RETLW  43
+00B4:  RETLW  45
+00B5:  RETLW  00
+00B6:  RETLW  0C
+.................... signed int Word(char line[], unsigned int8 *a, len)  
+.................... {  
+....................    unsigned int8 i;                       // Index do pole klicovych slov  
+....................    unsigned int8 j;                       // index do zpracovavane radky  
+....................   
+....................    while((line[*a]==' ')&(*a<len))        // Vynech mezery na zacatku  
+*
+03A1:  MOVF   62,W
+03A2:  MOVWF  04
+03A3:  MOVF   61,W
+03A4:  ADDWF  00,W
+03A5:  MOVWF  04
+03A6:  MOVF   00,W
+03A7:  SUBLW  20
+03A8:  BTFSC  03.2
+03A9:  GOTO   3AC
+03AA:  MOVLW  00
+03AB:  GOTO   3AD
+03AC:  MOVLW  01
+03AD:  MOVWF  68
+03AE:  MOVF   62,W
+03AF:  MOVWF  04
+03B0:  MOVF   63,W
+03B1:  SUBWF  00,W
+03B2:  BTFSS  03.0
+03B3:  GOTO   3B6
+03B4:  MOVLW  00
+03B5:  GOTO   3B7
+03B6:  MOVLW  01
+03B7:  ANDWF  68,W
+03B8:  XORLW  00
+03B9:  BTFSC  03.2
+03BA:  GOTO   3BF
+....................       (*a)++;                             // Posouvej ukazovatko  
+03BB:  MOVF   62,W
+03BC:  MOVWF  04
+03BD:  INCF   00,F
+03BE:  GOTO   3A1
+....................   
+....................    for (i=0;i<sizeof(KeyWords);)          // Slova ze slovniku  
+03BF:  CLRF   64
+03C0:  MOVF   64,W
+03C1:  SUBLW  61
+03C2:  BTFSS  03.0
+03C3:  GOTO   42B
+....................    {  
+....................       for (j=*a;(j<len)&(KeyWords[i]!=0)&(KeyWords[i]==line[j]);i++,j++)   // Znaky ze slova  
+03C4:  MOVF   62,W
+03C5:  MOVWF  04
+03C6:  MOVF   00,W
+03C7:  MOVWF  65
+03C8:  MOVF   63,W
+03C9:  SUBWF  65,W
+03CA:  BTFSS  03.0
+03CB:  GOTO   3CE
+03CC:  MOVLW  00
+03CD:  GOTO   3CF
+03CE:  MOVLW  01
+03CF:  MOVWF  66
+03D0:  MOVF   64,W
+03D1:  CALL   051
+03D2:  XORLW  00
+03D3:  BTFSS  03.2
+03D4:  GOTO   3D7
+03D5:  MOVLW  00
+03D6:  GOTO   3D8
+03D7:  MOVLW  01
+03D8:  ANDWF  66,W
+03D9:  MOVWF  68
+03DA:  MOVF   64,W
+03DB:  CALL   051
+03DC:  MOVWF  69
+03DD:  MOVF   61,W
+03DE:  ADDWF  65,W
+03DF:  MOVWF  04
+03E0:  MOVF   00,W
+03E1:  SUBWF  69,W
+03E2:  BTFSC  03.2
+03E3:  GOTO   3E6
+03E4:  MOVLW  00
+03E5:  GOTO   3E7
+03E6:  MOVLW  01
+03E7:  ANDWF  68,W
+03E8:  XORLW  00
+03E9:  BTFSC  03.2
+03EA:  GOTO   3EF
+....................       {  
+....................       }  
+03EB:  MOVF   64,W
+03EC:  INCF   64,F
+03ED:  INCF   65,F
+03EE:  GOTO   3C8
+....................       if ((KeyWords[i]==0)&((line[j]==' ')|(j==len)))  
+03EF:  MOVF   64,W
+03F0:  CALL   051
+03F1:  XORLW  00
+03F2:  BTFSC  03.2
+03F3:  GOTO   3F6
+03F4:  MOVLW  00
+03F5:  GOTO   3F7
+03F6:  MOVLW  01
+03F7:  MOVWF  67
+03F8:  MOVF   61,W
+03F9:  ADDWF  65,W
+03FA:  MOVWF  04
+03FB:  MOVF   00,W
+03FC:  SUBLW  20
+03FD:  BTFSC  03.2
+03FE:  GOTO   401
+03FF:  MOVLW  00
+0400:  GOTO   402
+0401:  MOVLW  01
+0402:  MOVWF  69
+0403:  MOVF   63,W
+0404:  SUBWF  65,W
+0405:  BTFSC  03.2
+0406:  GOTO   409
+0407:  MOVLW  00
+0408:  GOTO   40A
+0409:  MOVLW  01
+040A:  IORWF  69,W
+040B:  ANDWF  67,W
+040C:  XORLW  00
+040D:  BTFSC  03.2
+040E:  GOTO   421
+....................       {  
+....................          if (j>=len) j=len-1;             // Korekce abychom se nedostali za konec retezce  
+040F:  MOVF   63,W
+0410:  SUBWF  65,W
+0411:  BTFSS  03.0
+0412:  GOTO   416
+0413:  MOVLW  01
+0414:  SUBWF  63,W
+0415:  MOVWF  65
+....................          *a=j+1;                          // Posun ukazovatko za zpracovane slovo  
+0416:  MOVF   62,W
+0417:  MOVWF  04
+0418:  MOVLW  01
+0419:  ADDWF  65,W
+041A:  MOVWF  00
+....................   
+....................          return KeyWords[i+1];            // Vrat zastupnou hodnotu z tabulky klicovych slov  
+041B:  MOVLW  01
+041C:  ADDWF  64,W
+041D:  CALL   051
+041E:  MOVWF  78
+041F:  MOVWF  78
+0420:  GOTO   42D
+....................       }  
+....................       while(KeyWords[i]!=0) i++;          // Preskoc zbytek slova v tabulce  
+0421:  MOVF   64,W
+0422:  CALL   051
+0423:  XORLW  00
+0424:  BTFSC  03.2
+0425:  GOTO   428
+0426:  INCF   64,F
+0427:  GOTO   421
+....................       i++;                                // Preskoc oddelovac  
+0428:  INCF   64,F
+....................       i++;                                // Preskoc polozku se zastupnou hodnotou  
+0429:  INCF   64,F
+....................    }  
+042A:  GOTO   3C0
+....................    return -1;                             // Prosli jsme cely slovnik a nedoslo ke shode  
+042B:  MOVLW  FF
+042C:  MOVWF  78
+.................... }  
+....................   
+....................   
+.................... // Programovani pres RS232  
+.................... #define LINELEN   40                      // Delka radky pro RS232  
+.................... #define CR        0x0D                    // Odradkovani  
+.................... #define BS        0x08                    // Back Space  
+.................... void Download()  
+.................... {  
+....................    char  line[LINELEN];                   // Buffer na radku  
+....................    unsigned char c;                       // Znak  
+....................    unsigned int8 a;                       // Ukazovatko do bufferu  
+....................    unsigned int8 len;                     // Delka retezce v radce  
+....................    unsigned int8 Oct;                     // Cislo oktavy u noty  
+....................   
+....................    output_low(POWER_386);                 // Zapni napajeni zesilovace  
+*
+0347:  BSF    03.5
+0348:  BCF    05.4
+0349:  BCF    03.5
+034A:  BCF    05.4
+....................    SoundNote(SOUND_Space,3,10);           // Mezera  
+034B:  MOVLW  0C
+034C:  MOVWF  69
+034D:  MOVLW  03
+034E:  MOVWF  6A
+034F:  CLRF   6C
+0350:  MOVLW  0A
+0351:  MOVWF  6B
+0352:  CALL   0E2
+....................    Beep=SoundPGM;  
+0353:  MOVLW  03
+0354:  MOVWF  33
+....................    Error=0;  
+0355:  BCF    2D.1
+....................    SpecBeep();                            // Pipni na znameni vstupu do programovani  
+0356:  CALL   13A
+....................   
+....................    Tempo=100;                             // Default hodnoty  
+0357:  CLRF   2F
+0358:  MOVLW  64
+0359:  MOVWF  2E
+....................    Pause=100;  
+035A:  CLRF   31
+035B:  MOVWF  30
+....................    Octava=0;  
+035C:  CLRF   32
+....................    Mode=0;                                // Mod hrani  
+035D:  BCF    2D.0
+....................    Oct=0;  
+035E:  CLRF   60
+....................    a=0;                                   // Na zacatku je radka prazdna  
+035F:  CLRF   5E
+....................   
+....................    for(;input(POWER_PIC)==0;)             // Opakuj vse dokud je PGM rezim  
+0360:  BSF    03.5
+0361:  BSF    05.3
+0362:  MOVLW  00
+0363:  BCF    03.5
+0364:  BTFSC  05.3
+0365:  MOVLW  01
+0366:  XORLW  00
+0367:  BTFSS  03.2
+0368:  GOTO   58F
+....................    {  
+....................    Loop:  
+....................       c=Getc();                           // Vezmi znak ze seriovky  
+0369:  CALL   152
+036A:  MOVF   78,W
+036B:  MOVWF  5D
+....................       if (c>=0x80) goto Loop;             // Ignoruj znaky nad ASCII  
+036C:  MOVF   5D,W
+036D:  SUBLW  7F
+036E:  BTFSC  03.0
+036F:  GOTO   371
+0370:  GOTO   369
+....................       if (c>=0x60) c=c-0x20;              // Preved velka pismena na velka pismena  
+0371:  MOVF   5D,W
+0372:  SUBLW  5F
+0373:  BTFSC  03.0
+0374:  GOTO   377
+0375:  MOVLW  20
+0376:  SUBWF  5D,F
+....................       if ((c==CR)|(c=='/'))               // Konec radky nebo komentar  
+0377:  MOVF   5D,W
+0378:  SUBLW  0D
+0379:  BTFSC  03.2
+037A:  GOTO   37D
+037B:  MOVLW  00
+037C:  GOTO   37E
+037D:  MOVLW  01
+037E:  MOVWF  61
+037F:  MOVF   5D,W
+0380:  SUBLW  2F
+0381:  BTFSC  03.2
+0382:  GOTO   385
+0383:  MOVLW  00
+0384:  GOTO   386
+0385:  MOVLW  01
+0386:  IORWF  61,W
+0387:  XORLW  00
+0388:  BTFSC  03.2
+0389:  GOTO   55B
+....................       {  
+....................          while (c!=CR) c=Getc();          // Zpracuj znaky komentare  
+038A:  MOVF   5D,W
+038B:  SUBLW  0D
+038C:  BTFSC  03.2
+038D:  GOTO   392
+038E:  CALL   152
+038F:  MOVF   78,W
+0390:  MOVWF  5D
+0391:  GOTO   38A
+....................          len=a;                           // Zapamatuj si delku radky  
+0392:  MOVF   5E,W
+0393:  MOVWF  5F
+....................          a=0;                             // Postav se na zacatek radky  
+0394:  CLRF   5E
+....................          Beep=SoundEndOfLine;             // Default zuk na konci radky  
+0395:  MOVLW  01
+0396:  MOVWF  33
+....................          // Zpracovani radky  
+....................          while(a<len)  
+0397:  MOVF   5F,W
+0398:  SUBWF  5E,W
+0399:  BTFSC  03.0
+039A:  GOTO   558
+....................          {  
+....................             c=Word(line,&a,len);  
+039B:  MOVLW  35
+039C:  MOVWF  61
+039D:  MOVLW  5E
+039E:  MOVWF  62
+039F:  MOVF   5F,W
+03A0:  MOVWF  63
+*
+042D:  MOVF   78,W
+042E:  MOVWF  5D
+....................             if (c==-1)                    // Nezname klicove slovo  
+042F:  MOVF   5D,W
+0430:  SUBLW  FF
+0431:  BTFSS  03.2
+0432:  GOTO   466
+....................             {  
+....................                if (a<len)                 // Nejsme uz na konci radky ?? 
+0433:  MOVF   5F,W
+0434:  SUBWF  5E,W
+0435:  BTFSC  03.0
+0436:  GOTO   465
+....................                {  
+....................                   if ((line[a]>='0')&(line[a]<='9'))  // Stojime na cislici -> je to cislo  
+0437:  MOVLW  35
+0438:  ADDWF  5E,W
+0439:  MOVWF  04
+043A:  MOVF   00,W
+043B:  SUBLW  2F
+043C:  BTFSS  03.0
+043D:  GOTO   440
+043E:  MOVLW  00
+043F:  GOTO   441
+0440:  MOVLW  01
+0441:  MOVWF  62
+0442:  MOVLW  35
+0443:  ADDWF  5E,W
+0444:  MOVWF  04
+0445:  MOVF   00,W
+0446:  SUBLW  39
+0447:  BTFSC  03.0
+0448:  GOTO   44B
+0449:  MOVLW  00
+044A:  GOTO   44C
+044B:  MOVLW  01
+044C:  ANDWF  62,W
+044D:  XORLW  00
+044E:  BTFSC  03.2
+044F:  GOTO   45C
+....................                   {  
+....................                      // Oct=Number(line,&a,len)&0x7;  // tohle nefunguje protoze je chyba v prekladaci  
+....................                      Oct=Number(line,&a,len);         // prekladac prepoklada, z W obsahuje spodni bajt vysledku  
+0450:  MOVLW  35
+0451:  MOVWF  61
+0452:  MOVLW  5E
+0453:  MOVWF  62
+0454:  MOVF   5F,W
+0455:  MOVWF  63
+0456:  CALL   18C
+0457:  MOVF   78,W
+0458:  MOVWF  60
+....................                      Oct&=0x7;                        // ale k navratu pouziva RETLW 0 coz smaze W !  
+0459:  MOVLW  07
+045A:  ANDWF  60,F
+....................                   }  
+....................                   else                                // Stojime na pismenu nebo oddelovaci  
+045B:  GOTO   465
+....................                   {  
+....................                      if (line[a]!=' ') Error=1;       // Neni to oddelovac - chyba  
+045C:  MOVLW  35
+045D:  ADDWF  5E,W
+045E:  MOVWF  04
+045F:  MOVF   00,W
+0460:  SUBLW  20
+0461:  BTFSC  03.2
+0462:  GOTO   464
+0463:  BSF    2D.1
+....................                      a++;                             // Preskocim 1 znak (a kdyz to nepomuze dostanu se zase sem)  
+0464:  INCF   5E,F
+....................                   }  
+....................                }  
+....................             }  
+....................             else if (c=='P')              // Play  
+0465:  GOTO   557
+0466:  MOVF   5D,W
+0467:  SUBLW  50
+0468:  BTFSS  03.2
+0469:  GOTO   478
+....................             {  
+....................                CisloSkladby=Number(line,&a,len);  
+046A:  MOVLW  35
+046B:  MOVWF  61
+046C:  MOVLW  5E
+046D:  MOVWF  62
+046E:  MOVF   5F,W
+046F:  MOVWF  63
+0470:  CALL   18C
+0471:  MOVF   78,W
+0472:  MOVWF  34
+....................                Mode=0;  
+0473:  BCF    2D.0
+....................                Play();  
+0474:  CALL   279
+....................                Beep=SoundPGM;  
+0475:  MOVLW  03
+0476:  MOVWF  33
+....................             }  
+....................             else if (c=='E')              // Erase  
+0477:  GOTO   557
+0478:  MOVF   5D,W
+0479:  SUBLW  45
+047A:  BTFSS  03.2
+047B:  GOTO   4B6
+....................             {  
+....................                Mode=0;  
+047C:  BCF    2D.0
+....................                Erase();  
+....................                Beep=SoundPGM;  
+*
+04B3:  MOVLW  03
+04B4:  MOVWF  33
+....................             }  
+....................             else if (c=='t')              // Tempo  
+04B5:  GOTO   557
+04B6:  MOVF   5D,W
+04B7:  SUBLW  74
+04B8:  BTFSS  03.2
+04B9:  GOTO   4D6
+....................             {  
+....................                Tempo=Number(line,&a,len)&~MASKTEMPO;  
+04BA:  MOVLW  35
+04BB:  MOVWF  61
+04BC:  MOVLW  5E
+04BD:  MOVWF  62
+04BE:  MOVF   5F,W
+04BF:  MOVWF  63
+04C0:  CALL   18C
+04C1:  MOVF   78,W
+04C2:  MOVWF  2E
+04C3:  MOVF   79,W
+04C4:  ANDLW  C7
+04C5:  MOVWF  2F
+....................                if (Tempo==0) Tempo=100;  
+04C6:  MOVF   2E,F
+04C7:  BTFSS  03.2
+04C8:  GOTO   4CF
+04C9:  MOVF   2F,F
+04CA:  BTFSS  03.2
+04CB:  GOTO   4CF
+04CC:  CLRF   2F
+04CD:  MOVLW  64
+04CE:  MOVWF  2E
+....................                Data=Tempo|DATATEMPO;  
+04CF:  MOVF   2E,W
+04D0:  MOVWF  2B
+04D1:  MOVF   2F,W
+04D2:  IORLW  28
+04D3:  MOVWF  2C
+....................                WriteDataInc();            // Podmineny zapis do FLASH a posun na dalsi adresu  
+04D4:  CALL   2DC
+....................             }  
+....................             else if (c=='p')              // Pause  
+04D5:  GOTO   557
+04D6:  MOVF   5D,W
+04D7:  SUBLW  70
+04D8:  BTFSS  03.2
+04D9:  GOTO   4F6
+....................             {  
+....................                Pause=Number(line,&a,len)&~MASKPAUSE;  
+04DA:  MOVLW  35
+04DB:  MOVWF  61
+04DC:  MOVLW  5E
+04DD:  MOVWF  62
+04DE:  MOVF   5F,W
+04DF:  MOVWF  63
+04E0:  CALL   18C
+04E1:  MOVF   78,W
+04E2:  MOVWF  30
+04E3:  MOVF   79,W
+04E4:  ANDLW  C7
+04E5:  MOVWF  31
+....................                if (Pause==0) Pause=100;  
+04E6:  MOVF   30,F
+04E7:  BTFSS  03.2
+04E8:  GOTO   4EF
+04E9:  MOVF   31,F
+04EA:  BTFSS  03.2
+04EB:  GOTO   4EF
+04EC:  CLRF   31
+04ED:  MOVLW  64
+04EE:  MOVWF  30
+....................                Data=Pause|DATAPAUSE;  
+04EF:  MOVF   30,W
+04F0:  MOVWF  2B
+04F1:  MOVF   31,W
+04F2:  IORLW  30
+04F3:  MOVWF  2C
+....................                WriteDataInc();            // Podmineny zapis do FLASH a posun na dalsi adresu  
+04F4:  CALL   2DC
+....................             }  
+....................             else if (c=='B')              // Begin  
+04F5:  GOTO   557
+04F6:  MOVF   5D,W
+04F7:  SUBLW  42
+04F8:  BTFSS  03.2
+04F9:  GOTO   50D
+....................             {  
+....................                CisloSkladby=~0;           // Neplatne cislo skladby  
+04FA:  MOVLW  FF
+04FB:  MOVWF  34
+....................                Find();                    //   najde konec posledni skladby  
+04FC:  CALL   204
+....................                Octava=Number(line,&a,len)&~MASKBEGIN;  
+04FD:  MOVLW  35
+04FE:  MOVWF  61
+04FF:  MOVLW  5E
+0500:  MOVWF  62
+0501:  MOVF   5F,W
+0502:  MOVWF  63
+0503:  CALL   18C
+0504:  MOVF   78,W
+0505:  MOVWF  32
+....................                Data=DATABEGIN|Octava;     // Zacatecni znacka  
+0506:  MOVF   32,W
+0507:  MOVWF  2B
+0508:  MOVLW  20
+0509:  MOVWF  2C
+....................                Mode=1;                    // Mod zapisu do FLASH pameti  
+050A:  BSF    2D.0
+....................                WriteDataInc();            // Podmineny zapis do FLASH a posun na dalsi adresu  
+050B:  CALL   2DC
+....................             }  
+....................             else if (c=='b')              // Test  
+050C:  GOTO   557
+050D:  MOVF   5D,W
+050E:  SUBLW  62
+050F:  BTFSS  03.2
+0510:  GOTO   51C
+....................             {  
+....................                Octava=Number(line,&a,len)&~MASKBEGIN;  
+0511:  MOVLW  35
+0512:  MOVWF  61
+0513:  MOVLW  5E
+0514:  MOVWF  62
+0515:  MOVF   5F,W
+0516:  MOVWF  63
+0517:  CALL   18C
+0518:  MOVF   78,W
+0519:  MOVWF  32
+....................                Mode=0;  
+051A:  BCF    2D.0
+....................             }  
+....................             else if (c=='Z')              // End  
+051B:  GOTO   557
+051C:  MOVF   5D,W
+051D:  SUBLW  5A
+051E:  BTFSS  03.2
+051F:  GOTO   522
+....................             {  
+....................                Mode=0;  
+0520:  BCF    2D.0
+....................             }  
+....................             else                          // Nota  
+0521:  GOTO   557
+....................             {  
+....................                Data=Number(line,&a,len);  // Delka noty (nepovinna)  
+0522:  MOVLW  35
+0523:  MOVWF  61
+0524:  MOVLW  5E
+0525:  MOVWF  62
+0526:  MOVF   5F,W
+0527:  MOVWF  63
+0528:  CALL   18C
+0529:  MOVF   79,W
+052A:  MOVWF  2C
+052B:  MOVF   78,W
+052C:  MOVWF  2B
+....................                Data&=0x3F;                // Jen platny rozsah  
+052D:  MOVLW  3F
+052E:  ANDWF  2B,F
+052F:  MOVLW  00
+0530:  ANDWF  2C,F
+....................                if (Data==0) Data++;       // Je-li nulova delka - dej jednotkovou  
+0531:  MOVF   2B,F
+0532:  BTFSS  03.2
+0533:  GOTO   53A
+0534:  MOVF   2C,F
+0535:  BTFSS  03.2
+0536:  GOTO   53A
+0537:  INCF   2B,F
+0538:  BTFSC  03.2
+0539:  INCF   2C,F
+....................                Data<<=7;                  // Delka  
+053A:  RLF    2B,F
+053B:  RLF    2C,F
+053C:  RLF    2B,F
+053D:  RLF    2C,F
+053E:  RLF    2B,F
+053F:  RLF    2C,F
+0540:  RLF    2B,F
+0541:  RLF    2C,F
+0542:  RLF    2B,F
+0543:  RLF    2C,F
+0544:  RLF    2B,F
+0545:  RLF    2C,F
+0546:  RLF    2B,F
+0547:  RLF    2C,F
+0548:  MOVLW  80
+0549:  ANDWF  2B,F
+....................                Data|=c;                   // Nota  
+054A:  MOVF   5D,W
+054B:  IORWF  2B,F
+....................                Data|=(Oct<<4);            // Oktava  
+054C:  SWAPF  60,W
+054D:  MOVWF  77
+054E:  MOVLW  F0
+054F:  ANDWF  77,F
+0550:  MOVF   77,W
+0551:  IORWF  2B,F
+....................                WriteDataInc();            // Podmineny zapis do FLASH a posun na dalsi adresu  
+0552:  CALL   2DC
+....................                if (~Mode)  
+0553:  BTFSC  2D.0
+0554:  GOTO   557
+....................                {  
+....................                   PlayData();             // Zahraj notu  
+0555:  CALL   233
+....................                   Beep=0;                 // Po zahrani noty uz nepipej na konci radky  
+0556:  CLRF   33
+....................                }  
+....................             }  
+....................          }  
+0557:  GOTO   397
+....................          a=0;                             // Radka zpracovana, nuluj jeji delku  
+0558:  CLRF   5E
+....................          SpecBeep();                      // Pipni  
+0559:  CALL   13A
+....................          goto Loop;  
+055A:  GOTO   369
+....................       }  
+....................       if ((c==BS)&(a>0)) {a--;goto Loop;} // Smaz znak  
+055B:  MOVF   5D,W
+055C:  SUBLW  08
+055D:  BTFSC  03.2
+055E:  GOTO   561
+055F:  MOVLW  00
+0560:  GOTO   562
+0561:  MOVLW  01
+0562:  MOVWF  61
+0563:  MOVF   5E,F
+0564:  BTFSS  03.2
+0565:  GOTO   568
+0566:  MOVLW  00
+0567:  GOTO   569
+0568:  MOVLW  01
+0569:  ANDWF  61,W
+056A:  XORLW  00
+056B:  BTFSC  03.2
+056C:  GOTO   56F
+056D:  DECF   5E,F
+056E:  GOTO   369
+....................       if ((c==',')|(c<=' ')) c=' ';       // Vsechny ostatni ridici znaky i carka jsou oddelovac  
+056F:  MOVF   5D,W
+0570:  SUBLW  2C
+0571:  BTFSC  03.2
+0572:  GOTO   575
+0573:  MOVLW  00
+0574:  GOTO   576
+0575:  MOVLW  01
+0576:  MOVWF  61
+0577:  MOVF   5D,W
+0578:  SUBLW  20
+0579:  BTFSC  03.0
+057A:  GOTO   57D
+057B:  MOVLW  00
+057C:  GOTO   57E
+057D:  MOVLW  01
+057E:  IORWF  61,W
+057F:  XORLW  00
+0580:  BTFSC  03.2
+0581:  GOTO   584
+0582:  MOVLW  20
+0583:  MOVWF  5D
+....................       if (a<LINELEN) line[a++]=c;         // Zapis znak do bufferu a posun ukazovatko  
+0584:  MOVF   5E,W
+0585:  SUBLW  27
+0586:  BTFSS  03.0
+0587:  GOTO   58E
+0588:  MOVF   5E,W
+0589:  INCF   5E,F
+058A:  ADDLW  35
+058B:  MOVWF  04
+058C:  MOVF   5D,W
+058D:  MOVWF  00
+....................    }  
+058E:  GOTO   360
+058F:  GOTO   5BE (RETURN)
+.................... }  
+....................   
+....................   
+.................... // Tabulka pro prekodovani tlacitek  
+.................... const int8 KeyTranslate[16] = {0, 1, 2, 5, 3, 6, 8, 11, 4, 7, 9, 12, 10, 13, 14, 15};  
+*
+00B7:  BCF    0A.0
+00B8:  BCF    0A.1
+00B9:  BCF    0A.2
+00BA:  ADDWF  02,F
+00BB:  RETLW  00
+00BC:  RETLW  01
+00BD:  RETLW  02
+00BE:  RETLW  05
+00BF:  RETLW  03
+00C0:  RETLW  06
+00C1:  RETLW  08
+00C2:  RETLW  0B
+00C3:  RETLW  04
+00C4:  RETLW  07
+00C5:  RETLW  09
+00C6:  RETLW  0C
+00C7:  RETLW  0A
+00C8:  RETLW  0D
+00C9:  RETLW  0E
+00CA:  RETLW  0F
+....................   
+.................... void main()  
+.................... {  
+*
+0590:  CLRF   04
+0591:  MOVLW  1F
+0592:  ANDWF  03,F
+0593:  MOVLW  07
+0594:  BSF    03.5
+0595:  MOVWF  1F
+0596:  BCF    05.0
+0597:  BCF    03.5
+0598:  BCF    05.0
+.................... Start:  
+....................   
+....................    // Inicializace  
+....................    port_b_pullups(TRUE);                  // Zapni pull-up odpory na portu B  
+0599:  BSF    03.5
+059A:  BCF    01.7
+....................    set_tris_a(0b00001000);                // Nastav nepouzite vyvody jako vystupy  
+059B:  MOVLW  08
+059C:  MOVWF  05
+....................    set_tris_b(0b11110000);                //   1 znamena vstup  
+059D:  MOVLW  F0
+059E:  MOVWF  06
+....................    *0x9F = 6;                             // Vsechny vstupy jsou digitalni  
+059F:  MOVLW  06
+05A0:  MOVWF  1F
+....................   
+....................    // Test na rezim programovani  
+....................    if ((input(POWER_PIC)==0)&(input(RXD)==0))      // Podminka programovani  
+05A1:  BSF    05.3
+05A2:  MOVLW  00
+05A3:  BCF    03.5
+05A4:  BTFSC  05.3
+05A5:  MOVLW  01
+05A6:  XORLW  00
+05A7:  BTFSC  03.2
+05A8:  GOTO   5AB
+05A9:  MOVLW  00
+05AA:  GOTO   5AC
+05AB:  MOVLW  01
+05AC:  MOVWF  36
+05AD:  BSF    03.5
+05AE:  BSF    06.1
+05AF:  MOVLW  00
+05B0:  BCF    03.5
+05B1:  BTFSC  06.1
+05B2:  MOVLW  01
+05B3:  XORLW  00
+05B4:  BTFSC  03.2
+05B5:  GOTO   5B8
+05B6:  MOVLW  00
+05B7:  GOTO   5B9
+05B8:  MOVLW  01
+05B9:  ANDWF  36,W
+05BA:  XORLW  00
+05BB:  BTFSC  03.2
+05BC:  GOTO   5BE
+....................       Download();                                  //   Pripojen RS232 a propojka na PGM  
+05BD:  GOTO   347
+....................   
+....................    // Zapnuti napajeni  
+....................    output_low(POWER_PIC);                 // Pripoj GND pro procesor  
+05BE:  BSF    03.5
+05BF:  BCF    05.3
+05C0:  BCF    03.5
+05C1:  BCF    05.3
+....................    SoundNote(SOUND_Space,3,10);           // Mezera  
+05C2:  MOVLW  0C
+05C3:  MOVWF  69
+05C4:  MOVLW  03
+05C5:  MOVWF  6A
+05C6:  CLRF   6C
+05C7:  MOVLW  0A
+05C8:  MOVWF  6B
+05C9:  CALL   0E2
+....................    output_low(POWER_386);                 // Zapni napajeni zesilovace  
+05CA:  BSF    03.5
+05CB:  BCF    05.4
+05CC:  BCF    03.5
+05CD:  BCF    05.4
+....................    SoundNote(SOUND_Space,3,100);          // Mezera (jinak se chybne detekuje tlacitko)  
+05CE:  MOVLW  0C
+05CF:  MOVWF  69
+05D0:  MOVLW  03
+05D1:  MOVWF  6A
+05D2:  CLRF   6C
+05D3:  MOVLW  64
+05D4:  MOVWF  6B
+05D5:  CALL   0E2
+....................   
+....................    // Cteni tlacitek  
+....................    #use FAST_IO(B)  
+....................    CisloSkladby=(input_b() >> 4) ^ 0xFF & 0xF;     // Precti stav tlacitek  
+05D6:  SWAPF  06,W
+05D7:  MOVWF  77
+05D8:  MOVLW  0F
+05D9:  ANDWF  77,F
+05DA:  MOVF   77,W
+05DB:  XORLW  0F
+05DC:  MOVWF  34
+....................    #use STANDARD_IO(B)  
+....................    CisloSkladby=KeyTranslate[CisloSkladby];        // Prekoduj je do binarniho kodu  
+05DD:  MOVF   34,W
+05DE:  CALL   0B7
+05DF:  MOVWF  78
+05E0:  MOVWF  34
+....................   
+....................    // Prehrani skladby  
+....................    Play();                                // Zahraj skladbu  
+05E1:  CALL   279
+....................   
+....................    // Po odehrani usni a cekej na zmacknuti tlacitka  
+....................    #use FAST_IO(B)  
+....................    if (input_B());                        // Precti stav portu B (vuci tomuto stavu se bude hlidat zmena)  
+05E2:  MOVF   06,W
+05E3:  XORLW  00
+05E4:  BTFSC  03.2
+05E5:  GOTO   5E6
+....................    #use STANDARD_IO(B)  
+....................    bit_clear(*0xB,0);                     // Nuluj priznak preruseni od zmeny stavu portu B  
+05E6:  BCF    0B.0
+....................    enable_interrupts(INT_RB);             // Povol preruseni od zmeny stavu portu B  
+05E7:  BSF    0B.3
+....................   
+....................    output_high(POWER_386);                // Vypni napajeni zesilovace  
+05E8:  BSF    03.5
+05E9:  BCF    05.4
+05EA:  BCF    03.5
+05EB:  BSF    05.4
+....................    output_float(POWER_PIC);               // Odpoj GND  
+05EC:  BSF    03.5
+05ED:  BSF    05.3
+....................    Sleep();                               // Usni aby byla minimalni klidova spotreba  
+05EE:  SLEEP
+....................   
+....................    disable_interrupts(INT_RB);            // Zakaz preruseni od portu  
+05EF:  BCF    03.5
+05F0:  BCF    0B.3
+....................    goto Start;                            // Po probuzeni skoc na zacatek  
+05F1:  GOTO   599
+.................... }  
+....................  
+05F2:  SLEEP

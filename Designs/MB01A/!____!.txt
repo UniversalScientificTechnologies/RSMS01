@@ -1,0 +1,13 @@
+Verze je v zásadì funkèní ale potøebuje nìkolik drobných úprav.
+
+1) Místo R7 až R10 (odpory u tlaèítek) dát diody a kondenzátory C5 až C8 dát pøímo na tlaèítka. Umožní se tak programování v zapojení (ISP). 
+
+2) Dát kondenzátor 10nF mezi B a C tranzistoru Q2. Spomalí se tak rychlost zmìny zemního potenciálu procesoru PIC pøi pøechodu do vypnutého stavu. Zabrání se tím falešnému spuštìní od nabíjecího proudu kondenzátorù u tlaèítek.
+
+3) Dát odpor 10k mezi B a E tranzistoru Q1. Vyžadují to dobré návrháøské mravy.
+
+4) Dát odpro 100k mezi RDX pin konektoru J4 a uzel VDD procesoru PIC. Zajistí se tím definovaná úroveò na vstupu RDX procesoru v dobì, kdy není pøipojen prorgamovací kabel pøes RS232.
+
+5) Dát odpor mezi vývod RB3 a GND procesoru. U procesoru, který byl nakonec vybrán je na této nožièce signál LVP (Low Voltage Programming) a odstarní se tím komplikace pøi programování procesoru PIC pokud je smazaný (smazáním se povolí alternativní funkce LVP na nožièèce RB3 což je nežádoucí.
+
+Všechny výše uvedené úpravy se snadno udìlají na existujícím plošném spoji. Je vhodné použít SMD souèástek.

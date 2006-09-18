@@ -1,0 +1,602 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3c.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title> CT01B </title>
+    <meta name="keywords" content="stavebnice MLAB CT01B tester slunečních článků automatické měření">
+    <meta name="description" content="Projekt MLAB, CT01B tester slunečních článků">
+    <!-- AUTOINCLUDE START "Page/Head.cs.ihtml" DO NOT REMOVE -->
+    <link rel="StyleSheet" href="../../../../Web/CSS/MLAB.css" type="text/css" title="MLAB základní styl">
+    <link rel="shortcut icon" type="image/x-icon" href="Web/PIC/MLAB.ico">
+    <script type="text/javascript" src="../../../../Web/JS/MLAB_Menu.js"></script>
+    <!-- AUTOINCLUDE END -->
+  </head>
+
+  <body lang="cs">
+
+    <!-- AUTOINCLUDE START "Page/Header.cs.ihtml" DO NOT REMOVE -->
+    <!-- ============== HLAVICKA ============== -->
+    <div class="Header">
+      <script type="text/javascript">
+      <!--
+        SetRelativePath("../../../../");
+        DrawHeader();
+      // -->
+      </script>
+      <noscript>
+        <p><b> Pro zobrazení (vložení) hlavičky je potřeba JavaScript </b></p>
+      </noscript>
+    </div>
+    <!-- AUTOINCLUDE END -->
+
+    <!-- AUTOINCLUDE START "Page/Menu.cs.ihtml" DO NOT REMOVE -->
+    <!-- ============== MENU ============== -->
+    <div class="Menu">
+      <script type="text/javascript">
+      <!--
+        SetRelativePath("../../../../");
+        DrawMenu();
+      // -->
+      </script>
+      <noscript>
+        <p><b> Pro zobrazení (vložení) menu je potřeba JavaScript </b></p>
+      </noscript>
+    </div>
+    <!-- AUTOINCLUDE END -->
+
+    <!-- ============== TEXT ============== -->
+    <div class="Text">
+      <p class="Title">
+        Tester slunečních článků
+      </p>
+      <p class=Autor>
+        Milan Horkel
+      </p>
+      <p class="Subtitle">
+        Zařízení CT01B slouží k&nbsp;testování a měření slunečních článků a
+        baterií sestavených ze slunečních článků. Umožňuje průběžné zobrazení
+        optimálního zatěžovacího bodu (napětí, proud a výkon při optimální zátěži)
+        a změření zatěžovací charakteristiky a její odeslání do počítače PC.
+        Zařízení vzniklo pro měření slunečních článků používaných pro roboty
+        poháněné světlem.
+      </p>
+      <p class="Subtitle">
+        <img width=324 height=304 src="Pictures/image001.jpg"
+         alt="Obrázek CT01B">
+      </p>
+      <p>
+        <a href="../CT01B.cs.pdf"><img class="NoBorder"
+           src="../../../../Web/PIC/FileIco_PDF.ico"
+           alt="Acrobat">&nbsp;PDF verze</a>
+      </p>
+
+      <h1> Technické údaje </h1>
+
+      <table>
+        <tr>
+          <th> Parametr </th>
+          <th> Hodnota  </th>
+          <th> Poznámka </th>
+        </tr>
+        <tr>
+          <td> Napájení </td>
+          <td> 9 až 12V </td>
+          <td> </td>
+        </tr>
+        <tr>
+          <td> Spotřeba   </td>
+          <td> max. 265mA </td>
+          <td> Na prázdno do cca 15mA </td>
+        </tr>
+        <tr>
+          <td> Rozsah měření proudu </td>
+          <td> 0 až 250mA   </td>
+          <td> S krokem 1mA </td>
+        </tr>
+        <tr>
+          <td> Rozsah měření napětí </td>
+          <td> -0,2 až +4,4V        </td>
+          <td> </td>
+        </tr>
+        <tr>
+          <td> Rozhraní </td>
+          <td> RS232    </td>
+          <td> Jen RX/TX bez potvrzování </td>
+        </tr>
+        <tr>
+          <td> Rozměry        </td>
+          <td> 91 x 91 x 20mm </td>
+          <td> Výška nad nosnou deskou </td>
+        </tr>
+      </table>
+
+      <h1> Popis konstrukce </h1>
+
+      <h2> Úvodem </h2>
+
+      <p>
+        Uvedený modul vznikl z&nbsp;potřeby detailního prozkoumání vlastností
+        slunečních článků používaných pro solární vozítka. Cílem vývoje bylo
+        získat možnost rychlého a automatického měření zatěžovacích charakteristik
+        slunečních článků tak, aby se měření dalo stihnout dříve, než se články
+        ohřejí od lampy. Měří se závislost napětí na zatěžovacím proudu, který
+        se automaticky mění v&nbsp;rozsahu 0 až 250mA s&nbsp;krokem 1mA.
+        Měření se končí při dosažení nulového nebo záporného napětí na svorkách
+        slunečního článku. Naměřené hodnoty se automaticky odesílají po lince
+        RS232 do počítače PC.
+      </p>
+
+      <p>
+        Vzhledem k&nbsp;tomu, že zařízení obsahuje mikroprocesor, nebylo již
+        obtížné doplnit jej o algoritmus automatického průběžného hledání
+        optimální zátěže a zobrazování optimálního napětí, proudu i&nbsp;výkonu
+        na LCD displeji.
+      </p>
+
+      <h2> Zapojení modulu </h2>
+
+      <h3> Číslicová část </h3>
+
+      <p>
+        Základem zapojení je mikroprocesor PIC16F88, který obsahuje analogově
+        digitální (AD) převodník a obvod pro pulsně šířkovou modulaci (PWM).
+        AD převodník používáme k&nbsp;měření napětí na slunečních článcích.
+        Obvod PWM používáme jako digitálně analogový (DA) převodník pro
+        nastavování požadovaného zatěžovacího proudu.
+      </p>
+
+      <p>
+        Procesor běží z&nbsp;vnitřního oscilátoru, není tedy třeba připojovat
+        krystal. Reset je vyveden na tlačítko. Dále je připojen programovací
+        konektor. Funkční tlačítko F1 je připojeno na vstup B4 a&nbsp;standardní
+        dvouřádkový LCD displej je připojen obvyklým způsobem.
+      </p>
+
+      <p>
+        Pro komunikaci s&nbsp;PC se používá běžný převodník úrovní pro RS232
+        MAX232. Sériový kanál je připojen na vývody procesoru, které mají HW
+        podporu sériové komunikace.
+      </p>
+
+      <p>
+        Napájení zajišťuje stabilizátor s&nbsp;obvodem 7805. Spotřeba naprázdno
+        je cca 15mA (při připojeném PC). Spotřeba se zvětšuje o proud, který
+        teče slunečními články a může tak dosáhnout maximálně až 265mA.
+      </p>
+
+      <p>
+        <img width=473 height=122 src="Pictures/image002.gif"
+         alt="Napájecí zdroj">
+      </p>
+
+      <p>
+        <img width=513 height=420 src="Pictures/image003.gif"
+         alt="Procesor">
+      </p>
+
+      <p>
+        <img width=358 height=203 src="Pictures/image004.gif"
+         alt="Display">
+        <img width=323 height=312 src="Pictures/image005.gif"
+         alt="Převodník RS232">
+      </p>
+
+      <table class="Soupiska">
+        <tr>
+          <th> Reference </th>
+          <th> Hodnota   </th>
+        <tr>
+          <th colspan="2"> Odpory </th>
+        </tr>
+        <tr>
+          <td> R6 </td>
+          <td> 1  </td>
+        </tr>
+        <tr>
+          <td> R14, R18 </td>
+          <td> 100      </td>
+        </tr>
+        <tr>
+          <td> R5, R11, R13, R15 </td>
+          <td> 1k                </td>
+        </tr>
+        <tr>
+          <td> R10 </td>
+          <td> 1k2 </td>
+        </tr>
+        <tr>
+          <td> R2, R3, R7, R8, R9, R12, R17 </td>
+          <td> 10k </td>
+        </tr>
+        <tr>
+          <td> R16 </td>
+          <td> 47k </td>
+        </tr>
+        <tr>
+          <td> R1   </td>
+          <td> 180k </td>
+        </tr>
+        <tr>
+          <td> R4, R19, R20 </td>
+          <td> 220k         </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Odporové trimry </th>
+        </tr>
+        <tr>
+          <td> P1, P2, P3     </td>
+          <td> 47k/PT10MVK047 </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Keramické kondenzátory </th>
+        </tr>
+        <tr>
+          <td> C6   </td>
+          <td> 10nF </td>
+        </tr>
+        <tr>
+          <td> C2, C3, C4, C5, C7, C8, C9, C10, C12, C13, C14,
+               C15, C16, C17, C18, C19, C20 </td>
+          <td> 100nF </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Elektrolytické kondenzátory </th>
+        </tr>
+        <tr>
+          <td> C1       </td>
+          <td> 100M/16V </td>
+        </tr>
+        <tr>
+          <td> C11, C21  </td>
+          <td> 22uF/6.3V </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Diody </th>
+        </tr>
+        <tr>
+          <td> D1     </td>
+          <td> 1N4007 </td>
+        </tr>
+        <tr>
+          <td> D2        </td>
+          <td> BZX85_5V6 </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Tranzistory </th>
+        </tr>
+        <tr>
+          <td> Q1          </td>
+          <td> MOS-N-ENH-D </td>
+        </tr>
+        <tr>
+          <td> Q2    </td>
+          <td> BD136 </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Integrované obvody </th>
+        </tr>
+        <tr>
+          <td> U1      </td>
+          <td> LM7805T </td>
+        </tr>
+        <tr>
+          <td> U2      </td>
+          <td> TLC272C </td>
+        </tr>
+        <tr>
+          <td> U3         </td>
+          <td> PIC16F88/P </td>
+        </tr>
+        <tr>
+          <td> U4      </td>
+          <td> SC1602A </td>
+        </tr>
+        <tr>
+          <td> U5     </td>
+          <td> MAX232 </td>
+        </tr>
+        <tr>
+          <th colspan="2"> Mechanické součástky </th>
+        </tr>
+        <tr>
+          <td> SW1, SW2 </td>
+          <td> P-B1720  </td>
+        </tr>
+        <tr>
+          <td> J1    </td>
+          <td> K375A </td>
+        </tr>
+        <tr>
+          <td> J2    </td>
+          <td> JUMP4 </td>
+        </tr>
+        <tr>
+          <td> J3      </td>
+          <td> JUMP2X1 </td>
+        </tr>
+        <tr>
+          <td> J4    </td>
+          <td> JUMP3 </td>
+        </tr>
+        <tr>
+          <td> J5      </td>
+          <td> PIC_ISP </td>
+        </tr>
+        <tr>
+          <td> J6        </td>
+          <td> RS232DB9M </td>
+        </tr>
+      </table>
+      
+      <p>
+        <img width=330 height=888 src="Pictures/image006.gif"
+         alt="Schema">
+      </p>
+
+      <h3> Analogová část </h3>
+
+      <p>
+        Analogová část obvodu se skládá ze dvou obvodů. Prvním z&nbsp;nich
+        je zdroj proudu s&nbsp;tranzistorem Q1 a druhým je pak zdroj
+        pomocného napětí 0.5V s&nbsp;tranzistorem Q2.
+      </p>
+
+      <h4> Řízený zdroj proudu </h4>
+
+      <p>
+        Zdroj proudu je tvořen operačním zesilovačem (OZ) U2A, tranzistorem Q1
+        a snímacím odporem R6. OZ řídí tranzistor Q1 tak, aby úbytek na
+        R6 byl shodný jako napětí na jeho neinvertujícím vstupu. Pro maximální
+        proud 250mA je úbytek na R6 250mV. Při maximálním proudu je tedy
+        na kladné svorce J3.1 minimálně něco přes 250mV (rezerva na Q1).
+        Aby se dalo měřit až k&nbsp;nulovému napětí na článcích musí být
+        záporná svorka J3.2 udržována minimálně na tomto napětí.
+        Zvolené napětí záporné svorky je 0.5V.
+      </p>
+
+      <p>
+        Řídící napětí pro zdroj proudu se získává z PWM (pulsně šířková
+        modulace) výstupu procesoru U3.9. Toto pulsní napětí je jednak sníženo
+        na asi 1/20 velikosti (z rozsahu 0 až 5V na rozsah 0 až 250mV) odporovým
+        děličem R1, P1, R2 a filtrováno kondenzátorem C5 tak, aby vzniklo
+        stejnosměrné řídí napětí pro řízení proudového zdroje.
+      </p>
+
+      <p>
+        Protože reálný OZ má obecně nenulový ofset vstupního napětí (i několik
+        mV předem neznámé polarity) je do neinvertujícího vstupu OZ injektován
+        chybový proud tak, aby při nastavení PWM výstupu procesoru na
+        hodnotu 5 (5 z&nbsp;255) bylo možno nastavit nulový proud.
+        Nastavení nuly se provádí pomocí P2 při kalibraci.
+      </p>
+
+      <p>
+        Jako tranzistor Q1 se hodí libovolný NFET tranzistor, který má prahové
+        napětí do 2V. Takové tranzistory se dají získat například ze starých
+        mainboardů počítačů PC.
+      </p>
+
+      <h4> Pomocný zdroj napětí 0.5V</h4>
+
+      <p>
+        Druhou částí je zdroj pomocného napětí 0.5V, který umožňuje měřit
+        napětí na článcích až k&nbsp;nulové hodnotě (i kousek pod nulu). Dělič
+        R9, R10 definuje velikost napětí (1/10 napájecího), OZ U2B řídí pak
+        tranzistor Q2 tak, aby na svorce J4.1 bylo shodné napětí. Nevýhodou
+        je, že stejný proud, jaký teče slunečními články musí téct i přes Q2
+        z&nbsp;napájecího zdroje (tedy až 250mA).
+      </p>
+
+      <p>
+        Pro úsporné měření (pokud nás nezajímají hodnoty při napětí na slunečních
+        článcích menším než asi 0.5V) můžeme přepnout spojku J4.1-J4.2 do
+        úsporné polohy J4.2-J4.3. Pak je spotřeba celého přípravku 10 až 15mA.
+      </p>
+
+      <p>
+        Pokud jsou sluneční články nasvíceny elektrickým světlem (z žárovek)
+        je nutné filtrovat střídavou složku generovaného proudu. Prvotní
+        filtraci zajišťuje kondenzátor C21 přímo na měřících svorkách.
+        Další filtraci zajišťují RC články na vstupu AD převodníku R19, C20
+        a R20, C19.
+      </p>
+
+      <h2> Mechanická konstrukce </h2>
+
+      <p>
+        Přípravek je mechanicky řešen jako samostatná deska s&nbsp;rohovými
+        šrouby M3 pro uchycení. LCD displej je přichycen šrouby M2.5.
+      </p>
+
+      <h1> Osazení a oživení </h1>
+
+      <h2> Osazení </h2>
+
+      <p>
+        <img width=451 height=420 src="Pictures/image007.jpg"
+         alt="Osazovák, strana součástí">
+        <img width=414 height=213 src="Pictures/image008.jpg"
+         alt="Osazovák, strana spojů">
+      </p>
+
+      <h2> Oživení </h2>
+
+      <p>
+        Nejprve se kontroluje, zda stabilizátor U1 stabilizuje 5V. Spotřeba
+        by neměla přesáhnout 20mA. Pro kalibraci budeme potřebovat znát přesnou
+        velikost napětí +5V. Toto napětí se nejsnáze měří na výstupní svorce
+        stabilizátoru U1.
+      </p>
+
+      <p>
+        Po vložení procesoru a jeho naprogramování by měl začít LCD displej
+        vypisovat. Je třeba nastavit kontrast pomocí trimru P3.
+      </p>
+
+      <p>
+        Po připojení terminálu na sériové rozhraní (používáme null-modem kabel
+        a nastavení 9600Bd, 8bitů, 1stop bit a žádné řízení přenosu) by mělo
+        být možné pracovat v&nbsp;režimu kalibrace. Do režimu kalibrace se
+        vstupuje pokud se drží stisknuté tlačítko F1 při zapínání přípravku.
+      </p>
+
+      <p>
+        Vložíme operační zesilovač U2 a zkontrolujeme, zda zdroj proudu pracuje
+        správně. Připojíme laboratorní zdroj zápornou svorkou na zem
+        (propojka J4.2-J4.3) a kladnou svorku připojíme přes ampérmetr
+        na kladnou svorku přípravku J3.1. Nastavíme napětí mezi 0.5V a 5V
+        a v&nbsp;režimu kalibrace nastavujeme střídu PWM modulace.
+        Měřidlo by mělo ukazovat proud úměrný nastavenému číslu. Je vhodné
+        zkontrolovat, že se proud nemění při změně napětí v&nbsp;rozmezí
+        0.5V až 5V.
+      </p>
+
+      <p>
+        Dále zkontrolujeme, zda napětí na J4.1 („záporná svorka“) je cca 0.5V.
+        Na přesné hodnotě nezáleží. Přepojíme propojku J4.1-J4.2 a na měřící
+        svorky J3 zapojíme samotný ampérmetr. Při nastavení různých hodnot
+        PWM se nesmí napětí záporné svorky J3.2 měnit.
+      </p>
+
+      <h2> Kalibrace </h2>
+
+      <p>
+        Kalibrace se provádí v&nbsp;režimu kalibrace. Připojíme přes null-modem
+        kabel zařízení s&nbsp;počítačem PC a spustíme terminálový program
+        s&nbsp;nastavením komunikace 9600Bd, 8bitů, 1stop bit bez řízení toku dat.
+        Dále stiskneme tlačítko F1 a zapneme zařízení. Na terminálu by se mělo
+        objevit hlášení o kalibračním režimu.
+      </p>
+
+      <p>
+        Nejprve nastavíme správnou hodnotu referenčního napětí takto
+        (příklad uvádí nastavení 4.93V):
+      </p>
+
+      <p class="ShiftRight">
+        <samp>V4.93</samp>
+      </p>
+
+      <p>
+        Dále nastavíme ofset a zesílení proudového zdroje. Připojíme ampérmetr
+        na měřící svorky a propojku J4 do polohy 1-2. Proudový zdroj nastavujeme
+        tak, aby při hodnotě 5 proud právě netekl, při hodnotě 6 měl velikost
+        1mA a při hodnotě 204 měl velikost 199mA (voleno s&nbsp;ohledem na
+        rozsah digitálních měřidel 200mA).
+      </p>
+
+      <p class="ShiftRight">
+        <samp>5</samp>
+      </p>
+
+      <p>
+        A nastavíme pomocí trimru P2 nulový proud na ampérmetru připojeném
+        k&nbsp;měřícím svorkám.
+      </p>
+
+      <p class="ShiftRight">
+        <samp>204</samp>
+      </p>
+
+      <p>
+        A trimrem P1 nastavíme proud 199mA.
+      </p>
+
+      <p class="ShiftRight">
+        <samp>6</samp>
+      </p>
+
+      <p>
+        A zkontrolujeme proud 1mA. Celou posloupnost několikrát zopakujem
+        a ověříme, že se správně nastavuje měřený proud.
+      </p>
+
+      <p>
+        Zařízení současně při každém odřádkování vypisuje změřenou hodnotu
+        napětí na měřících svorkách.
+      </p>
+
+      <p>
+        Nakonec režim kalibrace ukončíme (dojde k&nbsp;uložení referenčního
+        napětí do paměti EEPROM):
+      </p>
+
+      <p class="ShiftRight">
+        <samp>Q</samp>
+      </p>
+
+      <h1> Programové vybavení </h1>
+
+      <h2> Uživatelský návod </h2>
+
+      <p>
+        Po zapnutí zařízení krátce zobrazí název a verzi programového vybavení
+        a pokud není stlačeno tlačítko F1 dojde k&nbsp;přechodu do automatického
+        režimu hledání optimální zátěže. Zařízení opakovaně prohledává závislost
+        napětí na proudu a průběžně zobrazuje napětí, proud a výkon při
+        optimální zátěži. Měření probíhá v&nbsp;rozsahu proud 0 až 250mA
+        při napětí 0 až 4.5V.
+      </p>
+
+      <p>
+        Pokud se stlačí tlačítko F1 provede se automatické změření celé V-A
+        charakteristiky slunečního článku a naměřené hodnoty se posílají na
+        RS232. Měření se provádí pro rostoucí proud v&nbsp;rozsahu 0 až 250mA
+        ale jen pro nezáporné hodnoty napětí.
+      </p>
+
+      <p>
+        Do režimu kalibrace se vstupuje pokud je tlačítko F1 stlačeno
+        v&nbsp;době zapínání zařízení. Pak se se zařízením komunikuje pomocí
+        terminálu na portu RS232. Viz kalibrace.
+      </p>
+
+      <h2> Popis programu </h2>
+
+      <p>
+        Program je prost záludností a nevyžaduje dalších komentářů.
+        Zdrojové texty jsou bohatě komentovány.
+      </p>
+
+      <h2> Interface </h2>
+
+      <p>
+        Takto vypadají přenesené hodnoty automatického měření V-A charakteristiky:
+      </p>
+
+      <p class="ShiftRight">
+        <samp>
+          Solar Cell<br>
+          Tester 1.00<br>
+          <br>
+          I[mA] U[V] P[mW]<br>
+          000 2.49 0.0<br>
+          001 2.41 2.4<br>
+          002 2.30 4.6<br>
+          003 2.18 6.5<br>
+          004 2.03 8.1<br>
+          005 1.80 9.0<br>
+          006 1.20 7.2<br>
+          007 0.36 2.5
+        </samp>
+      </p>
+
+    </div>
+
+    <!-- AUTOINCLUDE START "Page/Footer.cs.ihtml" DO NOT REMOVE -->
+    <!-- ============== PATIČKA ============== -->
+    <div class="Footer">
+      <script type="text/javascript">
+      <!--
+        SetRelativePath("../../../../");
+        DrawFooter();
+      // -->
+      </script>
+      <noscript>
+        <p><b> Pro zobrazení (vložení) hlavičky je potřeba JavaScript </b></p>
+      </noscript>
+    </div>
+    <!-- AUTOINCLUDE END -->
+
+  </body>
+</html>
