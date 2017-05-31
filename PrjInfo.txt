@@ -1,0 +1,14 @@
+﻿[InfoShortDescription.en]
+Radio storm monitoring station
+
+[InfoShortDescription.cs]
+Radiová monitorovací stanice bouřek
+
+[InfoLongDescription.en]
+
+
+[InfoLongDescription.cs]
+Systém je určený pro radiovou lokalizaci a sledování jevů v atmosféře. Předmětem sledování jsou hlavně elektrometeory, jako jsou třeba bleskové výboje.
+
+
+[End]
