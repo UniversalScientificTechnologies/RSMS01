@@ -3,7 +3,7 @@
 ##################################################
 # GNU Radio Python Flow Graph
 # Title: Parallella Streaming
-# Generated: Wed Feb 20 19:08:53 2019
+# Generated: Sun Aug 11 22:00:02 2019
 ##################################################
 
 
@@ -48,13 +48,14 @@ class parallella_streaming(grc_wxgui.top_block_gui):
         	ref_level=0,
         	ref_scale=2.0,
         	sample_rate=2500000,
-        	fft_size=512,
+        	fft_size=1024,
         	fft_rate=15,
         	average=False,
         	avg_alpha=None,
-        	title='Waterfall Plot',
+        	title='Waterfall Channels 6 and 7',
+        	size=(780,480),
         )
-        self.Add(self.wxgui_waterfallsink2_0_2.win)
+        self.GridAdd(self.wxgui_waterfallsink2_0_2.win, 1, 1, 1, 1)
         self.wxgui_waterfallsink2_0_1 = waterfallsink2.waterfall_sink_c(
         	self.GetWin(),
         	baseband_freq=0,
@@ -62,13 +63,14 @@ class parallella_streaming(grc_wxgui.top_block_gui):
         	ref_level=0,
         	ref_scale=2.0,
         	sample_rate=2500000,
-        	fft_size=512,
+        	fft_size=1024,
         	fft_rate=15,
         	average=False,
         	avg_alpha=None,
-        	title='Waterfall Plot',
+        	title='Waterfall Channels 4 and 5',
+        	size=(780,480),
         )
-        self.Add(self.wxgui_waterfallsink2_0_1.win)
+        self.GridAdd(self.wxgui_waterfallsink2_0_1.win, 1, 0, 1, 1)
         self.wxgui_waterfallsink2_0_0 = waterfallsink2.waterfall_sink_c(
         	self.GetWin(),
         	baseband_freq=0,
@@ -76,13 +78,14 @@ class parallella_streaming(grc_wxgui.top_block_gui):
         	ref_level=0,
         	ref_scale=2.0,
         	sample_rate=2500000,
-        	fft_size=512,
+        	fft_size=1024,
         	fft_rate=15,
         	average=False,
         	avg_alpha=None,
-        	title='Waterfall Plot',
+        	title='Waterfall Channels 2 and 3',
+        	size=(780,480),
         )
-        self.Add(self.wxgui_waterfallsink2_0_0.win)
+        self.GridAdd(self.wxgui_waterfallsink2_0_0.win, 0, 1, 1, 1)
         self.wxgui_waterfallsink2_0 = waterfallsink2.waterfall_sink_c(
         	self.GetWin(),
         	baseband_freq=0,
@@ -90,13 +93,15 @@ class parallella_streaming(grc_wxgui.top_block_gui):
         	ref_level=0,
         	ref_scale=2.0,
         	sample_rate=2500000,
-        	fft_size=512,
+        	fft_size=1024,
         	fft_rate=15,
         	average=False,
         	avg_alpha=None,
-        	title='Waterfall Plot',
+        	title='Waterfall Channels 0 and 1',
+        	size=(780,480),
         )
-        self.Add(self.wxgui_waterfallsink2_0.win)
+        self.GridAdd(self.wxgui_waterfallsink2_0.win, 0, 0, 1, 1)
+        (self.wxgui_waterfallsink2_0).set_processor_affinity([1])
         self.blocks_vector_to_streams_0 = blocks.vector_to_streams(gr.sizeof_short*1, 8)
         self.blocks_short_to_float_1_2 = blocks.short_to_float(1, 1)
         self.blocks_short_to_float_1_1 = blocks.short_to_float(1, 1)
