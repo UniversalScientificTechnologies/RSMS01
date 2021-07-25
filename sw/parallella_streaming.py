@@ -77,6 +77,18 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         ##################################################
         # Blocks
         ##################################################
+        self.tab_widget_0 = Qt.QTabWidget()
+        self.tab_widget_0_widget_0 = Qt.QWidget()
+        self.tab_widget_0_layout_0 = Qt.QBoxLayout(Qt.QBoxLayout.TopToBottom, self.tab_widget_0_widget_0)
+        self.tab_widget_0_grid_layout_0 = Qt.QGridLayout()
+        self.tab_widget_0_layout_0.addLayout(self.tab_widget_0_grid_layout_0)
+        self.tab_widget_0.addTab(self.tab_widget_0_widget_0, 'Frequency')
+        self.tab_widget_0_widget_1 = Qt.QWidget()
+        self.tab_widget_0_layout_1 = Qt.QBoxLayout(Qt.QBoxLayout.TopToBottom, self.tab_widget_0_widget_1)
+        self.tab_widget_0_grid_layout_1 = Qt.QGridLayout()
+        self.tab_widget_0_layout_1.addLayout(self.tab_widget_0_grid_layout_1)
+        self.tab_widget_0.addTab(self.tab_widget_0_widget_1, 'Time')
+        self.top_grid_layout.addWidget(self.tab_widget_0)
         self.qtgui_time_sink_x_0 = qtgui.time_sink_f(
             1024, #size
             samp_rate, #samp_rate
@@ -89,7 +101,7 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         self.qtgui_time_sink_x_0.set_y_label('Amplitude', "")
 
         self.qtgui_time_sink_x_0.enable_tags(True)
-        self.qtgui_time_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
+        self.qtgui_time_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_NORM, qtgui.TRIG_SLOPE_POS, 0.0, 0, 7, "")
         self.qtgui_time_sink_x_0.enable_autoscale(False)
         self.qtgui_time_sink_x_0.enable_grid(True)
         self.qtgui_time_sink_x_0.enable_axis_labels(True)
@@ -101,8 +113,8 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
             '3Q', '4I', '4Q', 'Signal 9', 'Signal 10']
         widths = [1, 1, 1, 1, 1,
             1, 1, 1, 1, 1]
-        colors = ['blue', 'red', 'green', 'black', 'cyan',
-            'magenta', 'yellow', 'dark red', 'dark green', 'dark blue']
+        colors = ['blue', 'green', 'green', 'black', 'yellow',
+            'dark blue', 'yellow', 'dark red', 'dark green', 'dark blue']
         alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
             1.0, 1.0, 1.0, 1.0, 1.0]
         styles = [1, 1, 1, 1, 1,
@@ -123,27 +135,43 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
             self.qtgui_time_sink_x_0.set_line_alpha(i, alphas[i])
 
         self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.pyqwidget(), Qt.QWidget)
-        self.top_grid_layout.addWidget(self._qtgui_time_sink_x_0_win)
+        self.tab_widget_0_layout_1.addWidget(self._qtgui_time_sink_x_0_win)
         self.fosphor_qt_sink_c_0_0_0_0 = fosphor.qt_sink_c()
         self.fosphor_qt_sink_c_0_0_0_0.set_fft_window(firdes.WIN_BLACKMAN_hARRIS)
         self.fosphor_qt_sink_c_0_0_0_0.set_frequency_range(0, samp_rate)
         self._fosphor_qt_sink_c_0_0_0_0_win = sip.wrapinstance(self.fosphor_qt_sink_c_0_0_0_0.pyqwidget(), Qt.QWidget)
-        self.top_grid_layout.addWidget(self._fosphor_qt_sink_c_0_0_0_0_win)
+        self.tab_widget_0_grid_layout_0.addWidget(self._fosphor_qt_sink_c_0_0_0_0_win, 1, 1, 1, 1)
+        for r in range(1, 2):
+            self.tab_widget_0_grid_layout_0.setRowStretch(r, 1)
+        for c in range(1, 2):
+            self.tab_widget_0_grid_layout_0.setColumnStretch(c, 1)
         self.fosphor_qt_sink_c_0_0_0 = fosphor.qt_sink_c()
         self.fosphor_qt_sink_c_0_0_0.set_fft_window(firdes.WIN_BLACKMAN_hARRIS)
         self.fosphor_qt_sink_c_0_0_0.set_frequency_range(0, samp_rate)
         self._fosphor_qt_sink_c_0_0_0_win = sip.wrapinstance(self.fosphor_qt_sink_c_0_0_0.pyqwidget(), Qt.QWidget)
-        self.top_grid_layout.addWidget(self._fosphor_qt_sink_c_0_0_0_win)
+        self.tab_widget_0_grid_layout_0.addWidget(self._fosphor_qt_sink_c_0_0_0_win, 1, 0, 1, 1)
+        for r in range(1, 2):
+            self.tab_widget_0_grid_layout_0.setRowStretch(r, 1)
+        for c in range(0, 1):
+            self.tab_widget_0_grid_layout_0.setColumnStretch(c, 1)
         self.fosphor_qt_sink_c_0_0 = fosphor.qt_sink_c()
         self.fosphor_qt_sink_c_0_0.set_fft_window(firdes.WIN_BLACKMAN_hARRIS)
         self.fosphor_qt_sink_c_0_0.set_frequency_range(0, samp_rate)
         self._fosphor_qt_sink_c_0_0_win = sip.wrapinstance(self.fosphor_qt_sink_c_0_0.pyqwidget(), Qt.QWidget)
-        self.top_grid_layout.addWidget(self._fosphor_qt_sink_c_0_0_win)
+        self.tab_widget_0_grid_layout_0.addWidget(self._fosphor_qt_sink_c_0_0_win, 0, 1, 1, 1)
+        for r in range(0, 1):
+            self.tab_widget_0_grid_layout_0.setRowStretch(r, 1)
+        for c in range(1, 2):
+            self.tab_widget_0_grid_layout_0.setColumnStretch(c, 1)
         self.fosphor_qt_sink_c_0 = fosphor.qt_sink_c()
         self.fosphor_qt_sink_c_0.set_fft_window(firdes.WIN_BLACKMAN_hARRIS)
         self.fosphor_qt_sink_c_0.set_frequency_range(0, samp_rate)
         self._fosphor_qt_sink_c_0_win = sip.wrapinstance(self.fosphor_qt_sink_c_0.pyqwidget(), Qt.QWidget)
-        self.top_grid_layout.addWidget(self._fosphor_qt_sink_c_0_win)
+        self.tab_widget_0_grid_layout_0.addWidget(self._fosphor_qt_sink_c_0_win, 0, 0, 1, 1)
+        for r in range(0, 1):
+            self.tab_widget_0_grid_layout_0.setRowStretch(r, 1)
+        for c in range(0, 1):
+            self.tab_widget_0_grid_layout_0.setColumnStretch(c, 1)
         self.blocks_vector_to_streams_0 = blocks.vector_to_streams(gr.sizeof_short*1, 8)
         self.blocks_short_to_float_1_2 = blocks.short_to_float(1, 1)
         self.blocks_short_to_float_1_1 = blocks.short_to_float(1, 1)

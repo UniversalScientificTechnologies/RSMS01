@@ -289,10 +289,10 @@ blocks:
   parameters:
     affinity: ''
     alias: ''
-    comment: ''
+    comment: channel 1
     freq_center: '0'
     freq_span: samp_rate
-    gui_hint: ''
+    gui_hint: 'tab_widget_0@0 : 0,0,1,1'
     wintype: firdes.WIN_BLACKMAN_hARRIS
   states:
     bus_sink: false
@@ -309,7 +309,7 @@ blocks:
     comment: ''
     freq_center: '0'
     freq_span: samp_rate
-    gui_hint: ''
+    gui_hint: 'tab_widget_0@0: 0,1,1,1'
     wintype: firdes.WIN_BLACKMAN_hARRIS
   states:
     bus_sink: false
@@ -326,7 +326,7 @@ blocks:
     comment: ''
     freq_center: '0'
     freq_span: samp_rate
-    gui_hint: ''
+    gui_hint: tab_widget_0@0:1,0,1,1
     wintype: firdes.WIN_BLACKMAN_hARRIS
   states:
     bus_sink: false
@@ -343,7 +343,7 @@ blocks:
     comment: ''
     freq_center: '0'
     freq_span: samp_rate
-    gui_hint: ''
+    gui_hint: tab_widget_0@0:1,1,1,1
     wintype: firdes.WIN_BLACKMAN_hARRIS
   states:
     bus_sink: false
@@ -371,11 +371,11 @@ blocks:
     axislabels: 'True'
     color1: blue
     color10: dark blue
-    color2: red
+    color2: green
     color3: green
     color4: black
-    color5: cyan
-    color6: magenta
+    color5: yellow
+    color6: dark blue
     color7: yellow
     color8: dark red
     color9: dark green
@@ -383,7 +383,7 @@ blocks:
     ctrlpanel: 'True'
     entags: 'True'
     grid: 'True'
-    gui_hint: ''
+    gui_hint: tab_widget_0@1
     label1: 1I
     label10: Signal 10
     label2: 1Q
@@ -420,10 +420,10 @@ blocks:
     style7: '1'
     style8: '1'
     style9: '1'
-    tr_chan: '0'
+    tr_chan: '7'
     tr_delay: '0'
     tr_level: '0.0'
-    tr_mode: qtgui.TRIG_MODE_FREE
+    tr_mode: qtgui.TRIG_MODE_NORM
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
     type: float
@@ -446,9 +446,43 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1328, 272.0]
+    coordinate: [1336, 208.0]
     rotation: 0
     state: enabled
+- name: tab_widget_0
+  id: qtgui_tab_widget
+  parameters:
+    alias: ''
+    comment: ''
+    gui_hint: ''
+    label0: Frequency
+    label1: Time
+    label10: Tab 10
+    label11: Tab 11
+    label12: Tab 12
+    label13: Tab 13
+    label14: Tab 14
+    label15: Tab 15
+    label16: Tab 16
+    label17: Tab 17
+    label18: Tab 18
+    label19: Tab 19
+    label2: Tab 2
+    label3: Tab 3
+    label4: Tab 4
+    label5: Tab 5
+    label6: Tab 6
+    label7: Tab 7
+    label8: Tab 8
+    label9: Tab 9
+    num_tabs: '2'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1344, 76.0]
+    rotation: 0
+    state: true
 
 connections:
 - [blocks_file_source_0, '0', blocks_vector_to_streams_0, '0']
