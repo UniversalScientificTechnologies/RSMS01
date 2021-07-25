@@ -79,7 +79,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [842, 122]
+    coordinate: [824, 136.0]
     rotation: 0
     state: enabled
 - name: blocks_float_to_complex_0_0
@@ -95,7 +95,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [896, 240]
+    coordinate: [824, 248.0]
     rotation: 0
     state: enabled
 - name: blocks_float_to_complex_0_1
@@ -111,7 +111,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [904, 464]
+    coordinate: [824, 352.0]
     rotation: 0
     state: enabled
 - name: blocks_float_to_complex_0_2
@@ -127,7 +127,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [896, 696]
+    coordinate: [824, 456.0]
     rotation: 0
     state: enabled
 - name: blocks_short_to_float_0
@@ -144,7 +144,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [629, 112]
+    coordinate: [640, 124.0]
     rotation: 0
     state: enabled
 - name: blocks_short_to_float_0_0
@@ -161,7 +161,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [680, 236]
+    coordinate: [640, 236.0]
     rotation: 0
     state: enabled
 - name: blocks_short_to_float_0_1
@@ -178,7 +178,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [688, 460]
+    coordinate: [640, 340.0]
     rotation: 0
     state: enabled
 - name: blocks_short_to_float_0_2
@@ -195,7 +195,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [680, 684]
+    coordinate: [640, 444.0]
     rotation: 0
     state: enabled
 - name: blocks_short_to_float_1
@@ -212,7 +212,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [629, 186]
+    coordinate: [640, 172.0]
     rotation: 0
     state: enabled
 - name: blocks_short_to_float_1_0
@@ -229,7 +229,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [680, 308]
+    coordinate: [640, 284.0]
     rotation: 0
     state: enabled
 - name: blocks_short_to_float_1_1
@@ -246,7 +246,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [688, 532]
+    coordinate: [640, 388.0]
     rotation: 0
     state: enabled
 - name: blocks_short_to_float_1_2
@@ -263,7 +263,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [680, 756]
+    coordinate: [640, 492.0]
     rotation: 0
     state: enabled
 - name: blocks_vector_to_streams_0
@@ -298,7 +298,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1112, 92.0]
+    coordinate: [1056, 148.0]
     rotation: 0
     state: true
 - name: fosphor_qt_sink_c_0_0
@@ -315,7 +315,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1112, 260.0]
+    coordinate: [1056, 252.0]
     rotation: 0
     state: enabled
 - name: fosphor_qt_sink_c_0_0_0
@@ -332,7 +332,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1128, 484.0]
+    coordinate: [1056, 348.0]
     rotation: 0
     state: enabled
 - name: fosphor_qt_sink_c_0_0_0_0
@@ -349,7 +349,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1136, 644.0]
+    coordinate: [1056, 452.0]
     rotation: 0
     state: enabled
 - name: qtgui_time_sink_x_0
@@ -384,15 +384,15 @@ blocks:
     entags: 'True'
     grid: 'True'
     gui_hint: ''
-    label1: Signal 1
+    label1: 1I
     label10: Signal 10
-    label2: Signal 2
-    label3: Signal 3
-    label4: Signal 4
-    label5: Signal 5
-    label6: Signal 6
-    label7: Signal 7
-    label8: Signal 8
+    label2: 1Q
+    label3: 2I
+    label4: 2Q
+    label5: 3I
+    label6: 3Q
+    label7: 4I
+    label8: 4Q
     label9: Signal 9
     legend: 'True'
     marker1: '-1'
@@ -406,7 +406,7 @@ blocks:
     marker8: '-1'
     marker9: '-1'
     name: '""'
-    nconnections: '4'
+    nconnections: '8'
     size: '1024'
     srate: samp_rate
     stemplot: 'False'
@@ -426,7 +426,7 @@ blocks:
     tr_mode: qtgui.TRIG_MODE_FREE
     tr_slope: qtgui.TRIG_SLOPE_POS
     tr_tag: '""'
-    type: complex
+    type: float
     update_time: '0.10'
     width1: '1'
     width10: '1'
@@ -446,28 +446,32 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1336, 204.0]
+    coordinate: [1328, 272.0]
     rotation: 0
-    state: disabled
+    state: enabled
 
 connections:
 - [blocks_file_source_0, '0', blocks_vector_to_streams_0, '0']
 - [blocks_float_to_complex_0, '0', fosphor_qt_sink_c_0, '0']
-- [blocks_float_to_complex_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_float_to_complex_0_0, '0', fosphor_qt_sink_c_0_0, '0']
-- [blocks_float_to_complex_0_0, '0', qtgui_time_sink_x_0, '1']
 - [blocks_float_to_complex_0_1, '0', fosphor_qt_sink_c_0_0_0, '0']
-- [blocks_float_to_complex_0_1, '0', qtgui_time_sink_x_0, '2']
 - [blocks_float_to_complex_0_2, '0', fosphor_qt_sink_c_0_0_0_0, '0']
-- [blocks_float_to_complex_0_2, '0', qtgui_time_sink_x_0, '3']
 - [blocks_short_to_float_0, '0', blocks_float_to_complex_0, '0']
+- [blocks_short_to_float_0, '0', qtgui_time_sink_x_0, '0']
 - [blocks_short_to_float_0_0, '0', blocks_float_to_complex_0_0, '0']
+- [blocks_short_to_float_0_0, '0', qtgui_time_sink_x_0, '2']
 - [blocks_short_to_float_0_1, '0', blocks_float_to_complex_0_1, '0']
+- [blocks_short_to_float_0_1, '0', qtgui_time_sink_x_0, '4']
 - [blocks_short_to_float_0_2, '0', blocks_float_to_complex_0_2, '0']
+- [blocks_short_to_float_0_2, '0', qtgui_time_sink_x_0, '6']
 - [blocks_short_to_float_1, '0', blocks_float_to_complex_0, '1']
+- [blocks_short_to_float_1, '0', qtgui_time_sink_x_0, '1']
 - [blocks_short_to_float_1_0, '0', blocks_float_to_complex_0_0, '1']
+- [blocks_short_to_float_1_0, '0', qtgui_time_sink_x_0, '3']
 - [blocks_short_to_float_1_1, '0', blocks_float_to_complex_0_1, '1']
+- [blocks_short_to_float_1_1, '0', qtgui_time_sink_x_0, '5']
 - [blocks_short_to_float_1_2, '0', blocks_float_to_complex_0_2, '1']
+- [blocks_short_to_float_1_2, '0', qtgui_time_sink_x_0, '7']
 - [blocks_vector_to_streams_0, '0', blocks_short_to_float_0, '0']
 - [blocks_vector_to_streams_0, '1', blocks_short_to_float_1, '0']
 - [blocks_vector_to_streams_0, '2', blocks_short_to_float_0_0, '0']

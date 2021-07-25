@@ -21,13 +21,14 @@ if __name__ == '__main__':
             print("Warning: failed to XInitThreads()")
 
 from PyQt5 import Qt
+from gnuradio import qtgui
+from gnuradio.filter import firdes
 import sip
 from gnuradio import fosphor
 from gnuradio.fft import window
 from gnuradio import blocks
 import pmt
 from gnuradio import gr
-from gnuradio.filter import firdes
 import sys
 import signal
 from argparse import ArgumentParser
@@ -76,6 +77,53 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         ##################################################
         # Blocks
         ##################################################
+        self.qtgui_time_sink_x_0 = qtgui.time_sink_f(
+            1024, #size
+            samp_rate, #samp_rate
+            "", #name
+            8 #number of inputs
+        )
+        self.qtgui_time_sink_x_0.set_update_time(0.10)
+        self.qtgui_time_sink_x_0.set_y_axis(-10000, 10000)
+
+        self.qtgui_time_sink_x_0.set_y_label('Amplitude', "")
+
+        self.qtgui_time_sink_x_0.enable_tags(True)
+        self.qtgui_time_sink_x_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
+        self.qtgui_time_sink_x_0.enable_autoscale(False)
+        self.qtgui_time_sink_x_0.enable_grid(True)
+        self.qtgui_time_sink_x_0.enable_axis_labels(True)
+        self.qtgui_time_sink_x_0.enable_control_panel(True)
+        self.qtgui_time_sink_x_0.enable_stem_plot(False)
+
+
+        labels = ['1I', '1Q', '2I', '2Q', '3I',
+            '3Q', '4I', '4Q', 'Signal 9', 'Signal 10']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ['blue', 'red', 'green', 'black', 'cyan',
+            'magenta', 'yellow', 'dark red', 'dark green', 'dark blue']
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+        styles = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        markers = [-1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1]
+
+
+        for i in range(8):
+            if len(labels[i]) == 0:
+                self.qtgui_time_sink_x_0.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_time_sink_x_0.set_line_label(i, labels[i])
+            self.qtgui_time_sink_x_0.set_line_width(i, widths[i])
+            self.qtgui_time_sink_x_0.set_line_color(i, colors[i])
+            self.qtgui_time_sink_x_0.set_line_style(i, styles[i])
+            self.qtgui_time_sink_x_0.set_line_marker(i, markers[i])
+            self.qtgui_time_sink_x_0.set_line_alpha(i, alphas[i])
+
+        self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.pyqwidget(), Qt.QWidget)
+        self.top_grid_layout.addWidget(self._qtgui_time_sink_x_0_win)
         self.fosphor_qt_sink_c_0_0_0_0 = fosphor.qt_sink_c()
         self.fosphor_qt_sink_c_0_0_0_0.set_fft_window(firdes.WIN_BLACKMAN_hARRIS)
         self.fosphor_qt_sink_c_0_0_0_0.set_frequency_range(0, samp_rate)
@@ -123,13 +171,21 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_float_to_complex_0_1, 0), (self.fosphor_qt_sink_c_0_0_0, 0))
         self.connect((self.blocks_float_to_complex_0_2, 0), (self.fosphor_qt_sink_c_0_0_0_0, 0))
         self.connect((self.blocks_short_to_float_0, 0), (self.blocks_float_to_complex_0, 0))
+        self.connect((self.blocks_short_to_float_0, 0), (self.qtgui_time_sink_x_0, 0))
         self.connect((self.blocks_short_to_float_0_0, 0), (self.blocks_float_to_complex_0_0, 0))
+        self.connect((self.blocks_short_to_float_0_0, 0), (self.qtgui_time_sink_x_0, 2))
         self.connect((self.blocks_short_to_float_0_1, 0), (self.blocks_float_to_complex_0_1, 0))
+        self.connect((self.blocks_short_to_float_0_1, 0), (self.qtgui_time_sink_x_0, 4))
         self.connect((self.blocks_short_to_float_0_2, 0), (self.blocks_float_to_complex_0_2, 0))
+        self.connect((self.blocks_short_to_float_0_2, 0), (self.qtgui_time_sink_x_0, 6))
         self.connect((self.blocks_short_to_float_1, 0), (self.blocks_float_to_complex_0, 1))
+        self.connect((self.blocks_short_to_float_1, 0), (self.qtgui_time_sink_x_0, 1))
         self.connect((self.blocks_short_to_float_1_0, 0), (self.blocks_float_to_complex_0_0, 1))
+        self.connect((self.blocks_short_to_float_1_0, 0), (self.qtgui_time_sink_x_0, 3))
         self.connect((self.blocks_short_to_float_1_1, 0), (self.blocks_float_to_complex_0_1, 1))
+        self.connect((self.blocks_short_to_float_1_1, 0), (self.qtgui_time_sink_x_0, 5))
         self.connect((self.blocks_short_to_float_1_2, 0), (self.blocks_float_to_complex_0_2, 1))
+        self.connect((self.blocks_short_to_float_1_2, 0), (self.qtgui_time_sink_x_0, 7))
         self.connect((self.blocks_vector_to_streams_0, 0), (self.blocks_short_to_float_0, 0))
         self.connect((self.blocks_vector_to_streams_0, 2), (self.blocks_short_to_float_0_0, 0))
         self.connect((self.blocks_vector_to_streams_0, 4), (self.blocks_short_to_float_0_1, 0))
@@ -153,6 +209,7 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         self.fosphor_qt_sink_c_0_0.set_frequency_range(0, self.samp_rate)
         self.fosphor_qt_sink_c_0_0_0.set_frequency_range(0, self.samp_rate)
         self.fosphor_qt_sink_c_0_0_0_0.set_frequency_range(0, self.samp_rate)
+        self.qtgui_time_sink_x_0.set_samp_rate(self.samp_rate)
 
 
 
