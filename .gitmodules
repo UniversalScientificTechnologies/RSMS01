@@ -10,3 +10,6 @@
 [submodule "hw/MPPB01"]
 	path = hw/MPPB01
 	url = git@github.com:mlab-modules/MPPB01.git
+[submodule "sw/station-supervisor"]
+	path = sw/station-supervisor
+	url = git@github.com:MLAB-project/station-supervisor.git
