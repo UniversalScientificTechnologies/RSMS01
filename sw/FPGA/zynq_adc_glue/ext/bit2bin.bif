@@ -1,0 +1,6 @@
+the_ROM_image:
+{
+	[bootloader]ext/dummy.elf
+	build/zynq_adc_glue.bit
+}
+
