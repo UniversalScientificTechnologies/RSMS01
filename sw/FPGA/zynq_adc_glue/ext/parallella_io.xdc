@@ -147,3 +147,10 @@ set_property PACKAGE_PIN P16 [get_ports {adc_d_n[6]}]
 set_property PACKAGE_PIN T16 [get_ports {adc_d_p[7]}]
 set_property PACKAGE_PIN U17 [get_ports {adc_d_n[7]}]
 
+set_property PACKAGE_PIN V16 [get_ports {a_sync_n}]
+set_property PACKAGE_PIN W16 [get_ports {a_sync_p}]
+set_property PACKAGE_PIN V13 [get_ports {b_sync_n}]
+set_property PACKAGE_PIN U13 [get_ports {b_sync_p}]
+
+
+set_property IOSTANDARD LVDS_25 [get_ports *_sync_*]
