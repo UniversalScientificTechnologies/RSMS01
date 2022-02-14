@@ -1,0 +1,5 @@
+the_ROM_image:
+{
+	build/zynq_adc_glue.bit
+}
+
