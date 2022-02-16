@@ -13,3 +13,6 @@
 [submodule "sw/station-supervisor"]
 	path = sw/station-supervisor
 	url = git@github.com:MLAB-project/station-supervisor.git
+[submodule "hw/USB232R02"]
+	path = hw/USB232R02
+	url = git@github.com:mlab-modules/USB232R02.git
