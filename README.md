@@ -13,6 +13,7 @@ The array could be mounted stationary or mobile on the car roof.
 
 ![Station block schamatics](./DOC/SRC/img/RSMS_receiver.png "Overview of interconnectio of station components")
 
+Block diagram of UHF radio receiver used in the experiment. The internals of the active antenna mounted on the car roof are depicted in blue bubbles on the left of schematics. 
 
 #### Visualization
 
