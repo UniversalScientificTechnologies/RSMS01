@@ -7,6 +7,7 @@ The array could be mounted stationary or mobile on the car roof.
 
 ![Mobile antenna array](./DOC/SRC/img/mobile_array.jpg "Mobile antenna array on a car roof")
 
+![Mobile receiver mounted](./DOC/SRC/img/car_back_mount.png)
 
 #### Block Schematics
 
