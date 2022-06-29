@@ -1,7 +1,7 @@
 ### Radio Storm Monitorig Station
 
-Mobile UHF lightning mapping station based on antenna array.
-The array could either be mounted stationary or mobile on the car roof.
+Mobile UHF lightning mapping station based on an antenna array.
+The array could either be stationary or mobile, mounted on the car roof.
 
 ![Stationary antenna array](./DOC/SRC/img/Stationary_array.jpg "Stationary antenna array on an observatory roof")
 
