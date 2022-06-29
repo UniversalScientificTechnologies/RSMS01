@@ -1,7 +1,7 @@
 ### Radio Storm Monitorig Station
 
 Mobile UHF lightning mapping station based on antenna array.
-The array could be mounted stationary or mobile on the car roof.
+The array could either be mounted stationary or mobile on the car roof.
 
 ![Stationary antenna array](./DOC/SRC/img/Stationary_array.jpg "Stationary antenna array on an observatory roof")
 
@@ -11,9 +11,9 @@ The array could be mounted stationary or mobile on the car roof.
 
 #### Block Schematics
 
-![Station block schamatics](./DOC/SRC/img/RSMS_receiver.png "Overview of interconnectio of station components")
+![Station block schamatics](./DOC/SRC/img/RSMS_receiver.png "Overview of interconnection of station components")
 
-Block diagram of UHF radio receiver used in the experiment. The internals of the active antenna mounted on the car roof are depicted in blue bubbles on the left of schematics. 
+Block diagram of UHF radio receiver used in the experiment. The internals of the active antenna mounted on the car roof are depicted in the blue bubbles on the left part of schematics. 
 
 #### Visualization
 
