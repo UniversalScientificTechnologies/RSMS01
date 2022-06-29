@@ -10,8 +10,8 @@ header:
 ---
 
 
-Mobile UHF lightning mapping station based on antenna array.
-The array could be mounted stationary or mobile on the car roof.
+Mobile UHF lightning mapping station based on an antenna array.
+The array could either be stationary or mobile, mounted on the car roof.
 
 ![Stationary antenna array](./DOC/SRC/img/Stationary_array.jpg "Stationary antenna array on an observatory roof")
 
@@ -20,7 +20,7 @@ The array could be mounted stationary or mobile on the car roof.
 
 #### Block Schematics
 
-![Station block schamatics](./DOC/SRC/img/RSMS_receiver.png "Overview of interconnectio of station components")
+![Station block schamatics](./DOC/SRC/img/RSMS_receiver.png "Overview of interconnection of station components")
 
 
 #### Visualization
