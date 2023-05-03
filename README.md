@@ -25,3 +25,7 @@ The device uses [fosphor](https://osmocom.org/projects/sdr/wiki/fosphor) for rea
 
 
 ![Fosphor waterfall for antenna array](./DOC/SRC/img/fosphor_waterfall.png)
+
+#### Relevant scientific publications
+
+  * [In situ ground-based mobile measurement of lightning events above central Europe](https://amt.copernicus.org/articles/16/547/2023/)
