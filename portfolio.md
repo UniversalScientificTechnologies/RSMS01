@@ -1,6 +1,6 @@
 ---
-title: "RSMS01"
-excerpt: "Radio Storm Monitoring Station"
+title: "Radio storm monitoring station"
+excerpt: "RSMS01 is radio Lightning Monitoring Station"
 header:
   image: products/RSMS01/DOC/SRC/img/RSMS01B_receiver.jpg
   teaser: products/RSMS01/DOC/SRC/img/RSMS01B_receiver.jpg
@@ -11,17 +11,16 @@ header:
 
 ![Lightning signal receiver RSMS01B](./DOC/SRC/img/RSMS01B_receiver.jpg "UHF lightnig signal receiver RSMS01B")
 
-Mobile UHF lightning mapping station based on an antenna array.
+Mobile UHF lightning mapping station based on an antenna array. The device is essential tool for lightning research.
 The array could either be stationary or mobile, mounted on the car roof.
 
 ![Stationary antenna array](./DOC/SRC/img/Stationary_array.jpg "Stationary antenna array on an observatory roof")
 
 ![Mobile antenna array](./DOC/SRC/img/mobile_array.jpg "Mobile antenna array on a car roof")
 
-
 #### Block Schematics
 
-![Station block schamatics](./DOC/SRC/img/RSMS_receiver.png "Overview of interconnection of station components")
+![Station block schematics](./DOC/SRC/img/RSMS_receiver.png "Overview of interconnection of station components")
 
 
 #### Visualization
