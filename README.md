@@ -29,3 +29,4 @@ The device uses [fosphor](https://osmocom.org/projects/sdr/wiki/fosphor) for rea
 #### Relevant scientific publications
 
   * [In situ ground-based mobile measurement of lightning events above central Europe](https://amt.copernicus.org/articles/16/547/2023/)
+  * [Radio Detection of Electromagnetic Phenomena in the Atmosphere - Integrating Advanced Instrumentation and UAVs for Enhanced Atmospheric Research](https://dspace.cvut.cz/handle/10467/120570) - Dissertation thesis
