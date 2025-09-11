@@ -6,9 +6,9 @@
 #
 # GNU Radio Python Flow Graph
 # Title: Parallella Streaming
-# GNU Radio version: 3.8.1.0
+# GNU Radio version: 3.10.1.1
 
-from distutils.version import StrictVersion
+from packaging.version import Version as StrictVersion
 
 if __name__ == '__main__':
     import ctypes
@@ -34,12 +34,15 @@ import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+
+
+
 from gnuradio import qtgui
 
 class parallella_streaming(gr.top_block, Qt.QWidget):
 
     def __init__(self):
-        gr.top_block.__init__(self, "Parallella Streaming")
+        gr.top_block.__init__(self, "Parallella Streaming", catch_exceptions=True)
         Qt.QWidget.__init__(self)
         self.setWindowTitle("Parallella Streaming")
         qtgui.util.check_set_qss()
@@ -88,12 +91,13 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         self.tab_widget_0_grid_layout_1 = Qt.QGridLayout()
         self.tab_widget_0_layout_1.addLayout(self.tab_widget_0_grid_layout_1)
         self.tab_widget_0.addTab(self.tab_widget_0_widget_1, 'Time')
-        self.top_grid_layout.addWidget(self.tab_widget_0)
+        self.top_layout.addWidget(self.tab_widget_0)
         self.qtgui_time_sink_x_0 = qtgui.time_sink_f(
             1024, #size
             samp_rate, #samp_rate
             "", #name
-            8 #number of inputs
+            8, #number of inputs
+            None # parent
         )
         self.qtgui_time_sink_x_0.set_update_time(0.10)
         self.qtgui_time_sink_x_0.set_y_axis(-10000, 10000)
@@ -134,10 +138,10 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
             self.qtgui_time_sink_x_0.set_line_marker(i, markers[i])
             self.qtgui_time_sink_x_0.set_line_alpha(i, alphas[i])
 
-        self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.pyqwidget(), Qt.QWidget)
+        self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
         self.tab_widget_0_layout_1.addWidget(self._qtgui_time_sink_x_0_win)
         self.fosphor_qt_sink_c_0_0_0_0 = fosphor.qt_sink_c()
-        self.fosphor_qt_sink_c_0_0_0_0.set_fft_window(firdes.WIN_BLACKMAN_hARRIS)
+        self.fosphor_qt_sink_c_0_0_0_0.set_fft_window(window.WIN_BLACKMAN_hARRIS)
         self.fosphor_qt_sink_c_0_0_0_0.set_frequency_range(0, samp_rate)
         self._fosphor_qt_sink_c_0_0_0_0_win = sip.wrapinstance(self.fosphor_qt_sink_c_0_0_0_0.pyqwidget(), Qt.QWidget)
         self.tab_widget_0_grid_layout_0.addWidget(self._fosphor_qt_sink_c_0_0_0_0_win, 1, 1, 1, 1)
@@ -146,7 +150,7 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         for c in range(1, 2):
             self.tab_widget_0_grid_layout_0.setColumnStretch(c, 1)
         self.fosphor_qt_sink_c_0_0_0 = fosphor.qt_sink_c()
-        self.fosphor_qt_sink_c_0_0_0.set_fft_window(firdes.WIN_BLACKMAN_hARRIS)
+        self.fosphor_qt_sink_c_0_0_0.set_fft_window(window.WIN_BLACKMAN_hARRIS)
         self.fosphor_qt_sink_c_0_0_0.set_frequency_range(0, samp_rate)
         self._fosphor_qt_sink_c_0_0_0_win = sip.wrapinstance(self.fosphor_qt_sink_c_0_0_0.pyqwidget(), Qt.QWidget)
         self.tab_widget_0_grid_layout_0.addWidget(self._fosphor_qt_sink_c_0_0_0_win, 1, 0, 1, 1)
@@ -155,7 +159,7 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         for c in range(0, 1):
             self.tab_widget_0_grid_layout_0.setColumnStretch(c, 1)
         self.fosphor_qt_sink_c_0_0 = fosphor.qt_sink_c()
-        self.fosphor_qt_sink_c_0_0.set_fft_window(firdes.WIN_BLACKMAN_hARRIS)
+        self.fosphor_qt_sink_c_0_0.set_fft_window(window.WIN_BLACKMAN_hARRIS)
         self.fosphor_qt_sink_c_0_0.set_frequency_range(0, samp_rate)
         self._fosphor_qt_sink_c_0_0_win = sip.wrapinstance(self.fosphor_qt_sink_c_0_0.pyqwidget(), Qt.QWidget)
         self.tab_widget_0_grid_layout_0.addWidget(self._fosphor_qt_sink_c_0_0_win, 0, 1, 1, 1)
@@ -164,7 +168,7 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         for c in range(1, 2):
             self.tab_widget_0_grid_layout_0.setColumnStretch(c, 1)
         self.fosphor_qt_sink_c_0 = fosphor.qt_sink_c()
-        self.fosphor_qt_sink_c_0.set_fft_window(firdes.WIN_BLACKMAN_hARRIS)
+        self.fosphor_qt_sink_c_0.set_fft_window(window.WIN_BLACKMAN_hARRIS)
         self.fosphor_qt_sink_c_0.set_frequency_range(0, samp_rate)
         self._fosphor_qt_sink_c_0_win = sip.wrapinstance(self.fosphor_qt_sink_c_0.pyqwidget(), Qt.QWidget)
         self.tab_widget_0_grid_layout_0.addWidget(self._fosphor_qt_sink_c_0_win, 0, 0, 1, 1)
@@ -187,7 +191,6 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
         self.blocks_file_source_0 = blocks.file_source(gr.sizeof_short*8, '/dev/stdin', False, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
-
 
 
         ##################################################
@@ -223,9 +226,13 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_vector_to_streams_0, 5), (self.blocks_short_to_float_1_1, 0))
         self.connect((self.blocks_vector_to_streams_0, 7), (self.blocks_short_to_float_1_2, 0))
 
+
     def closeEvent(self, event):
         self.settings = Qt.QSettings("GNU Radio", "parallella_streaming")
         self.settings.setValue("geometry", self.saveGeometry())
+        self.stop()
+        self.wait()
+
         event.accept()
 
     def get_samp_rate(self):
@@ -241,6 +248,7 @@ class parallella_streaming(gr.top_block, Qt.QWidget):
 
 
 
+
 def main(top_block_cls=parallella_streaming, options=None):
 
     if StrictVersion("4.5.0") <= StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
@@ -249,10 +257,15 @@ def main(top_block_cls=parallella_streaming, options=None):
     qapp = Qt.QApplication(sys.argv)
 
     tb = top_block_cls()
+
     tb.start()
+
     tb.show()
 
     def sig_handler(sig=None, frame=None):
+        tb.stop()
+        tb.wait()
+
         Qt.QApplication.quit()
 
     signal.signal(signal.SIGINT, sig_handler)
@@ -262,12 +275,7 @@ def main(top_block_cls=parallella_streaming, options=None):
     timer.start(500)
     timer.timeout.connect(lambda: None)
 
-    def quitting():
-        tb.stop()
-        tb.wait()
-    qapp.aboutToQuit.connect(quitting)
     qapp.exec_()
-
 
 if __name__ == '__main__':
     main()
