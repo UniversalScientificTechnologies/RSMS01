@@ -27,6 +27,12 @@ Why **UHF + VLF**:
 
 ## System architecture
 
+Block diagram of the UHF radio receiver used in the experiment. The internals of the active antenna mounted on the car roof are depicted in the blue bubbles on the left part of the schematics.
+
+![Station block schamatics](./DOC/SRC/img/RSMS_receiver.png "Overview of interconnection of station components")
+
+The station is interconnected with RSMS02 to get a trigger from stronger VLF signals. Therefore, the high-level system schematic looks like the following (the repeated signal strings are omitted).  
+
 ```mermaid
 flowchart LR
   subgraph UHF_Antenna_Array [UHF Antenna Array]
@@ -38,7 +44,7 @@ flowchart LR
 
   subgraph RF_FrontEnds [Active RF front-ends]
     direction LR
-    BPF1[BPF] --> LNA1[LNA] --> BPF2[BPF] --> LNA2[LNA] --> MIX[Mixer (LO)] --> LPF[LPF/Line-Driver]
+    BPF1[BPF] --> LNA1[LNA] --> BPF2[BPF] --> LNA2[LNA] --> MIX[Mixer LO] --> LPF[LPF Line-Driver]
   end
 
   Q1 & Q2 & Q3 & Q4 --> RF_FrontEnds
@@ -49,14 +55,12 @@ flowchart LR
   PPS[GNSS PPS time‑mark capture] --> RBUF
 
   subgraph RSMS02 [VLF station RSMS02]
-    VLFANT[STP loop antenna array] --> VLFADC[ADC] --> VLFTRIG[FPGA trigger\n(threshold + min‑width)]
+    VLFANT[STP loop antenna array] --> VLFADC[ADC] --> VLFTRIG[FPGA trigger threshold + min-width]
   end
   VLFTRIG -- "Trigger out" --> RBUF
+
 ```
 
-![Station block schamatics](./DOC/SRC/img/RSMS_receiver.png "Overview of interconnection of station components")
-
-Block diagram of the UHF radio receiver used in the experiment. The internals of the active antenna mounted on the car roof are depicted in the blue bubbles on the left part of the schematics.
 
 ### RF front‑end (per QFH element)
 
@@ -69,7 +73,7 @@ Block diagram of the UHF radio receiver used in the experiment. The internals of
 
 ### Antenna array
 
-* **QFH (Quadrifilar Helix)** elements with inherent quadrature ports → natural I/Q pairing and near‑omnidirectional, circularly‑polarized response across the band. Four elements arranged in a compact square roof deck.
+* **QFH (Quadrifilar Helix)** elements with inherent quadrature ports → natural I/Q pairing and near‑omnidirectional, circularly‑polarized response across the band. Four elements are arranged in a compact square roof deck.
 
 ![Stationary antenna array](./DOC/SRC/img/Stationary_array.jpg "Stationary antenna array on an observatory roof")
 
